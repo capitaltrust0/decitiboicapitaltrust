@@ -575,10 +575,10 @@ case 'get-all-customers': {
     if (!adminAuth) return { statusCode: 403, headers, body: JSON.stringify({ message: "Admin access required" }) };
 
     try {
-        const { search } = event.body ? JSON.parse(event.body) : {};
+        const { search, mode } = event.body ? JSON.parse(event.body) : {};
         let query = {};
 
-        // 1. Search Logic: Filter by Name or Email
+        // 1. Search Logic: Priority #1
         if (search) {
             query = {
                 $or: [
@@ -587,22 +587,26 @@ case 'get-all-customers': {
                     { email: { $regex: search, $options: 'i' } }
                 ]
             };
-        } else {
-            // 2. Chat Support Logic: Only fetch users who actually have message history
+        } 
+        // 2. Chat Support Mode: Only apply if explicitly requested
+        else if (mode === 'support') {
             query = { supportMessages: { $exists: true, $not: { $size: 0 } } };
         }
+        // 3. Default: Show all users (query remains {})
 
         const customers = await db.collection('users')
             .find(query)
             .project({ 
                 password: 0,        // Security: Never leak password hashes
-                loginPin: 0,        // Security: Hide sensitive pins
-                transferPin: 0,     // Security: Hide sensitive pins
+                loginPin: 0,        
+                transferPin: 0,     
                 profilePicKey: 0, 
                 __v: 0 
             })
-            // 3. Priority Sort: Newest messages at the top for fast response
-            .sort({ lastMessageAt: -1, lastName: 1 }) 
+            .sort({ 
+                // If in support mode, sort by message date, otherwise alphabetical
+                ...(mode === 'support' ? { lastMessageAt: -1 } : { lastName: 1 })
+            }) 
             .limit(100) 
             .toArray();
 
@@ -615,11 +619,11 @@ case 'get-all-customers': {
             }) 
         };
     } catch (err) {
-        console.error("Fetch Support Inbox Error:", err);
+        console.error("Fetch Users Error:", err);
         return { 
             statusCode: 500, 
             headers, 
-            body: JSON.stringify({ message: "Failed to fetch inbox", error: err.message }) 
+            body: JSON.stringify({ message: "Failed to fetch users", error: err.message }) 
         };
     }
 }
@@ -1434,32 +1438,51 @@ case 'send-support-message': {
 
     return { statusCode: 200, headers, body: JSON.stringify({ message: "Sent via Secure Email Link" }) };
 }
-
 case 'admin-reply-support': {
-    const adminAuth = verifyToken(event, 'admin'); 
-    const { userEmail, replyText } = JSON.parse(event.body); 
+    const adminAuth = verifyToken(event, 'admin');
+    if (!adminAuth) return { statusCode: 403, headers, body: JSON.stringify({ message: "Unauthorized" }) };
 
-    const adminReply = {
-        text: replyText.trim(),
-        sender: adminAuth.email, // "capitaltrust0@outlook.com"
-        type: 'admin-to-user',
-        recipient: userEmail,
-        date: new Date().toISOString()
-    };
+    try {
+        const { userEmail, replyText } = JSON.parse(event.body);
+        if (!replyText || !userEmail) throw new Error("Missing fields");
 
+        const adminReply = {
+            text: replyText.trim(),
+            sender: adminAuth.email, // Ensure this is "capitaltrust0@outlook.com"
+            type: 'admin-to-user',
+            recipient: userEmail,
+            date: new Date().toISOString()
+        };
+
+        await db.collection('users').updateOne(
+            { email: userEmail }, 
+            { 
+                $push: { supportMessages: adminReply },
+                $set: { 
+                    hasUnreadAdminReply: true, 
+                    lastAdminReplyBy: adminAuth.email,
+                    lastAdminReplyAt: adminReply.date,
+                    // IMPORTANT: Update this so the inbox sorts correctly
+                    lastMessageAt: adminReply.date 
+                } 
+            }
+        );
+
+        return { statusCode: 200, headers, body: JSON.stringify({ message: "Reply delivered" }) };
+    } catch (err) {
+        return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
+    }
+}
+
+case 'clear-support-unread': {
+    const auth = verifyToken(event, 'user');
+    if (!auth) return { statusCode: 403, body: JSON.stringify({ message: "Unauthorized" }) };
+    
     await db.collection('users').updateOne(
-        { email: userEmail }, 
-        { 
-            $push: { supportMessages: adminReply },
-            $set: { 
-                hasUnreadAdminReply: true, // Notify User of reply
-                lastAdminReplyBy: adminAuth.email,
-                lastAdminReplyAt: new Date().toISOString()
-            } 
-        }
+        { email: auth.email },
+        { $set: { hasUnreadAdminReply: false } }
     );
-
-    return { statusCode: 200, headers, body: JSON.stringify({ message: "Reply delivered to user chat" }) };
+    return { statusCode: 200, body: JSON.stringify({ success: true }) };
 }
 
 case 'admin-approve-application':

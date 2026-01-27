@@ -15,12 +15,17 @@
             .sidebar.active { transform: translateX(0); }
         }
         .chat-container { height: calc(100vh - 64px); }
-        .message-bubble-user { border-radius: 15px 15px 15px 2px; background: #f1f5f9; border: 1px solid #e2e8f0; }
-        .message-bubble-admin { border-radius: 15px 15px 2px 15px; background: #004a7c; color: white; }
+        
+        /* Smooth animations for messages */
+        @keyframes messageIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-msg { animation: messageIn 0.3s ease-out forwards; }
+        
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        
-        .unread-indicator { width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%; }
+        .unread-indicator { width: 10px; height: 10px; background-color: #ef4444; border-radius: 50%; border: 2px solid white; }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased overflow-hidden text-sm">
@@ -72,7 +77,7 @@
                 </div>
 
                 <div class="flex-grow flex flex-col bg-gray-50 overflow-hidden relative">
-                    <div id="no-chat-selected" class="absolute inset-0 flex items-center justify-center bg-gray-50 z-20">
+                    <div id="no-chat-selected" class="absolute inset-0 flex items-center justify-center bg-gray-50 z-20 transition-opacity duration-300">
                         <div class="text-center">
                             <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
                                 <i class="fa-solid fa-comments text-3xl text-gray-200"></i>
@@ -92,8 +97,7 @@
                         <button onclick="fetchConversations()" class="text-gray-400 hover:text-navy-light transition p-2"><i class="fa-solid fa-rotate"></i></button>
                     </div>
 
-                    <div id="message-history" class="flex-grow overflow-y-auto p-6 space-y-6 bg-[#f8fafc]">
-                        </div>
+                    <div id="message-history" class="flex-grow overflow-y-auto p-6 space-y-4 bg-[#f8fafc]"></div>
 
                     <div class="p-4 bg-white border-t shrink-0">
                         <form id="admin-reply-form" onsubmit="handleAdminReply(event)" class="flex gap-2 max-w-5xl mx-auto">
@@ -110,182 +114,159 @@
     </div>
 
     <script>
-       let selectedUserEmail = null; // Store email instead of just ID
-let allLoadedCustomers = [];
-const adminToken = sessionStorage.getItem('adminToken');
+        let selectedUserEmail = null;
+        let allLoadedCustomers = [];
+        const adminToken = sessionStorage.getItem('adminToken');
+        const adminEmail = "capitaltrust0@outlook.com"; 
 
-if (!adminToken) window.location.href = 'admin_login.html';
+        if (!adminToken) window.location.href = 'admin_login.html';
 
-// 1. Fetch Conversations (Fetches all users with message history)
-async function fetchConversations(isPolling = false) {
-    try {
-        const response = await fetch('/.netlify/functions/api', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
-            body: JSON.stringify({ action: 'get-all-customers' }) 
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            // Filter to only show users who actually have a chat history
-            allLoadedCustomers = data.customers.filter(u => u.supportMessages && u.supportMessages.length > 0);
-            renderUserList(allLoadedCustomers);
-            
-            if (selectedUserEmail) {
-                renderMessagesForSelectedUser();
+        // 1. Fetch Conversations (Targeting Support mode)
+        async function fetchConversations(isPolling = false) {
+            try {
+                const response = await fetch('/.netlify/functions/api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                    // CRITICAL: Tells backend to only fetch people with message history
+                    body: JSON.stringify({ action: 'get-all-customers', mode: 'support' }) 
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    allLoadedCustomers = data.customers || [];
+                    renderUserList(allLoadedCustomers);
+                    
+                    if (selectedUserEmail) {
+                        renderMessagesForSelectedUser();
+                    }
+                }
+            } catch (err) { 
+                console.error("Sync Error:", err); 
             }
         }
-    } catch (err) { 
-        console.error("Fetch error:", err); 
-    }
-}
 
-// 2. Render User List (The Inbox)
-function renderUserList(users) {
-    const container = document.getElementById('user-list-container');
-    
-    if (users.length === 0) {
-        container.innerHTML = '<div class="p-10 text-center text-gray-400 text-xs italic">No messages found.</div>';
-        return;
-    }
+        // 2. Render Sidebar
+        function renderUserList(users) {
+            const container = document.getElementById('user-list-container');
+            if (users.length === 0) {
+                container.innerHTML = '<div class="p-10 text-center text-gray-400 text-xs italic">No active support chats.</div>';
+                return;
+            }
 
-    // Sort: Put users with "hasUnreadAdminReply: false" (meaning they sent a new message) at the top
-    users.sort((a, b) => {
-        const lastA = new Date(a.lastMessageAt || 0);
-        const lastB = new Date(b.lastMessageAt || 0);
-        return lastB - lastA;
-    });
-
-    container.innerHTML = users.map(user => {
-        const lastMsg = user.supportMessages[user.supportMessages.length - 1];
-        const isUnread = user.hasUnreadAdminReply === false && lastMsg.sender !== 'admin';
-        const initials = (user.firstName?.[0] || '') + (user.lastName?.[0] || 'U');
-        
-        return `
-            <div onclick="selectUser('${user.email}', '${user.firstName} ${user.lastName}')" 
-                 class="p-4 hover:bg-slate-50 cursor-pointer transition flex gap-3 items-center border-l-4 ${selectedUserEmail === user.email ? 'bg-blue-50 border-blue-600' : 'border-transparent'}">
-                <div class="relative">
-                    <div class="w-10 h-10 rounded-full bg-navy-dark text-white shrink-0 flex items-center justify-center font-bold text-xs">
-                        ${initials.toUpperCase()}
+            container.innerHTML = users.map(user => {
+                const messages = user.supportMessages || [];
+                const lastMsg = messages[messages.length - 1] || { text: '...', date: new Date() };
+                
+                // Unread Logic: Customer sent a message, but Admin hasn't marked as read/replied
+                const isUnread = user.hasUnreadAdminReply === false && lastMsg.sender !== adminEmail;
+                const initials = (user.firstName?.[0] || '') + (user.lastName?.[0] || 'U');
+                
+                return `
+                    <div onclick="selectUser('${user.email}', '${user.firstName} ${user.lastName}')" 
+                         class="p-4 hover:bg-slate-50 cursor-pointer transition flex gap-3 items-center border-l-4 ${selectedUserEmail === user.email ? 'bg-blue-50 border-blue-600' : 'border-transparent'}">
+                        <div class="relative">
+                            <div class="w-10 h-10 rounded-full bg-navy-dark text-white shrink-0 flex items-center justify-center font-bold text-xs">
+                                ${initials.toUpperCase()}
+                            </div>
+                            ${isUnread ? '<div class="absolute -top-1 -right-1 unread-indicator"></div>' : ''}
+                        </div>
+                        <div class="min-w-0 flex-grow">
+                            <div class="flex justify-between items-center mb-0.5">
+                                <span class="font-bold text-gray-800 text-xs truncate">${user.firstName} ${user.lastName}</span>
+                                <span class="text-[9px] text-gray-400 font-medium">${formatDate(lastMsg.date)}</span>
+                            </div>
+                            <p class="text-[11px] ${isUnread ? 'text-blue-600 font-bold' : 'text-gray-500'} truncate">${lastMsg.text}</p>
+                        </div>
                     </div>
-                    ${isUnread ? '<div class="absolute -top-1 -right-1 unread-indicator border-2 border-white"></div>' : ''}
-                </div>
-                <div class="min-w-0 flex-grow">
-                    <div class="flex justify-between items-center mb-0.5">
-                        <span class="font-bold text-gray-800 text-xs truncate">${user.firstName} ${user.lastName}</span>
-                        <span class="text-[9px] text-gray-400 font-medium">${formatDate(lastMsg.date)}</span>
+                `;
+            }).join('');
+        }
+
+        // 3. Selection
+        function selectUser(email, name) {
+            selectedUserEmail = email;
+            document.getElementById('no-chat-selected').style.opacity = '0';
+            setTimeout(() => document.getElementById('no-chat-selected').classList.add('hidden'), 300);
+            
+            document.getElementById('active-user-name').innerText = name;
+            document.getElementById('active-user-email').innerText = email;
+            document.getElementById('active-user-avatar').innerText = name.split(' ').map(n => n[0]).join('').toUpperCase();
+            
+            renderMessagesForSelectedUser();
+        }
+
+        // 4. Render Messages
+        function renderMessagesForSelectedUser() {
+            const user = allLoadedCustomers.find(u => u.email === selectedUserEmail);
+            const historyContainer = document.getElementById('message-history');
+            if (!user) return;
+
+            const html = (user.supportMessages || []).map(msg => {
+                const isFromAdmin = msg.sender === adminEmail; 
+                
+                return `
+                    <div class="flex ${isFromAdmin ? 'justify-start' : 'justify-end'} animate-msg">
+                        <div class="max-w-[80%] p-3.5 ${isFromAdmin 
+                            ? 'bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-tl-none' 
+                            : 'bg-[#004a7c] text-white rounded-2xl rounded-tr-none shadow-md shadow-blue-900/10'}">
+                            
+                            <p class="text-[12px] leading-relaxed whitespace-pre-wrap">${msg.text}</p>
+                            
+                            <div class="flex items-center ${isFromAdmin ? 'justify-start' : 'justify-end'} gap-1 mt-1.5 opacity-50">
+                                <p class="text-[8px] font-bold uppercase tracking-tighter">
+                                    ${isFromAdmin ? 'Support' : 'Customer'} • ${new Date(msg.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                    <p class="text-[11px] ${isUnread ? 'text-blue-600 font-bold' : 'text-gray-500'} truncate">${lastMsg.text}</p>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
+                `;
+            }).join('');
 
-// 3. Selection Logic (Now uses Email)
-function selectUser(email, name) {
-    selectedUserEmail = email;
-    document.getElementById('no-chat-selected').classList.add('hidden');
-    document.getElementById('active-user-name').innerText = name;
-    document.getElementById('active-user-email').innerText = email;
-    document.getElementById('active-user-avatar').innerText = name.split(' ').map(n => n[0]).join('').toUpperCase();
-    
-    renderMessagesForSelectedUser();
-}
+            if (historyContainer.innerHTML !== html) {
+                historyContainer.innerHTML = html;
+                historyContainer.scrollTop = historyContainer.scrollHeight;
+            }
+        }
 
-// 4. Render Thread
-// 4. Render Thread (Corrected for Left/Right differentiation)
-function renderMessagesForSelectedUser() {
-    const user = allLoadedCustomers.find(u => u.email === selectedUserEmail);
-    const historyContainer = document.getElementById('message-history');
-    if (!user) return;
+        // 5. Send Admin Reply
+        async function handleAdminReply(e) {
+            e.preventDefault();
+            const input = document.getElementById('admin-input');
+            const text = input.value.trim();
+            
+            if (!text || !selectedUserEmail) return;
 
-    // Use the admin email from your database for differentiation
-    const adminEmail = "capitaltrust0@outlook.com"; 
+            // Optimistic Update
+            const user = allLoadedCustomers.find(u => u.email === selectedUserEmail);
+            const tempMsg = {
+                text: text,
+                sender: adminEmail,
+                date: new Date().toISOString()
+            };
+            
+            user.supportMessages.push(tempMsg);
+            renderMessagesForSelectedUser();
+            input.value = '';
 
-    const html = (user.supportMessages || []).map(msg => {
-        // Correct Differentiation: 
-        // Admin = Left (justify-start)
-        // User (Misty) = Right (justify-end)
-        const isFromAdmin = msg.sender === adminEmail; 
-        
-        return `
-            <div class="flex ${isFromAdmin ? 'justify-start' : 'justify-end'} mb-4 animate-in fade-in slide-in-from-bottom-1 duration-300">
-                <div class="max-w-[75%] p-3.5 ${isFromAdmin 
-                    ? 'bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-tl-none' 
-                    : 'bg-[#004a7c] text-white rounded-2xl rounded-tr-none shadow-md shadow-blue-900/10'}">
-                    
-                    <p class="text-[12px] leading-relaxed whitespace-pre-wrap">${msg.text}</p>
-                    
-                    <div class="flex items-center ${isFromAdmin ? 'justify-start' : 'justify-end'} gap-1 mt-1.5 opacity-50">
-                        <p class="text-[8px] font-bold uppercase tracking-tighter">
-                            ${isFromAdmin ? 'Support' : 'Customer'} • ${new Date(msg.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                        </p>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
+            try {
+                const response = await fetch('/.netlify/functions/api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                    body: JSON.stringify({ 
+                        action: 'admin-reply-support', 
+                        userEmail: selectedUserEmail, 
+                        replyText: text 
+                    })
+                });
 
-    // Update only if content has changed to prevent scroll jumping
-    if (historyContainer.innerHTML !== html) {
-        historyContainer.innerHTML = html;
-        historyContainer.scrollTop = historyContainer.scrollHeight;
-    }
-}
+                if (!response.ok) throw new Error("Server error");
+            } catch (err) {
+                console.error("Reply Failed:", err);
+                alert("Failed to send message. Please refresh.");
+            }
+        }
 
-// 5. Send Reply (Sends by User Email)
-// admin-support.html - Inside handleAdminReply function
-async function handleAdminReply(e) {
-    e.preventDefault();
-    const input = document.getElementById('admin-input');
-    const text = input.value.trim();
-    
-    // Safety check: must have text and a selected user
-    if (!text || !selectedUserEmail) return;
-
-    // 1. INSTANT UI UPDATE (Optimistic)
-    // We manually push the message to the local object so it renders instantly
-    const user = allLoadedCustomers.find(u => u.email === selectedUserEmail);
-    const tempAdminMsg = {
-        text: text,
-        sender: "capitaltrust0@outlook.com", // Your admin email
-        date: new Date().toISOString(),
-        isTemp: true // Flag to identify it's not confirmed yet
-    };
-    
-    user.supportMessages.push(tempAdminMsg);
-    renderMessagesForSelectedUser(); // Redraw chat window immediately
-    input.value = ''; // Clear input field
-
-    try {
-        const response = await fetch('/.netlify/functions/api', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
-            body: JSON.stringify({ 
-                action: 'admin-reply-support', 
-                userEmail: selectedUserEmail, 
-                replyText: text 
-            })
-        });
-
-        if (!response.ok) throw new Error("Failed to sync");
-        
-        // 2. BACKGROUND SYNC
-        // Optional: remove the 'isTemp' flag once server confirms
-        delete tempAdminMsg.isTemp; 
-
-    } catch (err) {
-        console.error("Reply failed:", err);
-        alert("Message failed to send. Please check your connection.");
-        // Optional: Remove the message from UI if it failed
-        user.supportMessages = user.supportMessages.filter(m => !m.isTemp);
-        renderMessagesForSelectedUser();
-    }
-}
-
-        // Helpers
         function formatDate(dateStr) {
             const date = new Date(dateStr);
             const now = new Date();
@@ -300,7 +281,7 @@ async function handleAdminReply(e) {
 
         function logout() { sessionStorage.clear(); window.location.href = 'admin_login.html'; }
 
-        // Search Filter
+        // Search locally through loaded conversations
         document.getElementById('user-search').addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             const filtered = allLoadedCustomers.filter(u => 
@@ -309,9 +290,8 @@ async function handleAdminReply(e) {
             renderUserList(filtered);
         });
 
-        // Initialize & Auto-Poll
         window.onload = () => fetchConversations();
-        setInterval(() => fetchConversations(true), 8000);
+        setInterval(() => fetchConversations(true), 6000); // 6-second sync
     </script>
 </body>
 </html>

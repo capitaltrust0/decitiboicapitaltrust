@@ -21,6 +21,12 @@
         
         #chat-window::-webkit-scrollbar { width: 4px; }
         #chat-window::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade { animation: fadeIn 0.3s ease-out; }
     </style>
 </head>
 <body class="bg-[#f4f7f9] font-sans antialiased text-slate-800 text-[13px] md:text-sm">
@@ -37,13 +43,13 @@
                     <i class="fa-solid fa-house w-4 text-blue-300"></i> Dashboard
                 </a>
                 <a href="cards.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs">
-                    <i class="fa-solid fa-house w-4 text-blue-300"></i> Credit Card
+                    <i class="fa-solid fa-credit-card w-4 text-blue-300"></i> Credit Card
                 </a>
                 <a href="transfer.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs">
-                    <i class="fa-solid fa-house w-4 text-blue-300"></i> Transfer
+                    <i class="fa-solid fa-money-bill-transfer w-4 text-blue-300"></i> Transfer
                 </a>
                 <a href="user_profile.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs">
-                    <i class="fa-solid fa-house w-4 text-blue-300"></i> Profile
+                    <i class="fa-solid fa-user w-4 text-blue-300"></i> Profile
                 </a>
                 <a href="Support.html" class="bg-navy-dark rounded-md p-2.5 flex items-center gap-3 cursor-pointer">
                     <i class="fa-solid fa-headset text-xs text-blue-300"></i>
@@ -68,18 +74,19 @@
             </header>
 
             <div id="chat-window" class="flex-grow overflow-y-auto p-4 md:p-6 space-y-4">
-                <div class="flex justify-start">
-                    <div class="max-w-[80%] p-3 chat-bubble-admin shadow-sm">
-                        <p class="text-[11px] leading-relaxed">Hello! Welcome to Capital Trusts Support. How can we help you with your account today?</p>
-                        <p class="text-[8px] mt-1 text-slate-400 text-right">System • Secure</p>
+                <div id="dynamic-messages" class="space-y-4">
+                    <div class="flex justify-start">
+                        <div class="max-w-[80%] p-3 chat-bubble-admin shadow-sm">
+                            <p class="text-[11px] leading-relaxed">Hello! Welcome to Capital Trusts Support. How can we help you today?</p>
+                            <p class="text-[8px] mt-1 text-slate-400 text-right">System • Secure</p>
+                        </div>
                     </div>
                 </div>
-                <div id="dynamic-messages" class="space-y-4"></div>
             </div>
 
             <div class="p-4 bg-white border-t shrink-0">
                 <form id="chat-form" onsubmit="sendMessage(event)" class="flex gap-2 max-w-4xl mx-auto">
-                    <input type="text" id="user-input" required 
+                    <input type="text" id="user-input" required autocomplete="off"
                         class="flex-grow bg-slate-100 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none text-xs" 
                         placeholder="Type your message here...">
                     <button type="submit" id="send-btn" 
@@ -95,12 +102,12 @@
     </div>
 
 <script>
-   // --- CONFIGURATION ---
 const token = sessionStorage.getItem('userToken');
+const adminEmail = "capitaltrust0@outlook.com"; 
+
 if (!token) window.location.href = '/index.html';
 
-// Decode the JWT token to get the logged-in user's email
-// (Assuming your token is a standard JWT. If not, fetch it from your profile data)
+// Extract user data from token
 const currentUserEmail = JSON.parse(atob(token.split('.')[1])).email; 
 
 const chatWindow = document.getElementById('chat-window');
@@ -109,14 +116,29 @@ const inputField = document.getElementById('user-input');
 let lastMessageCount = 0;
 
 /**
- * 1. Function to Add Message to UI
- * @param {string} id - Unique ID for the message element
+ * 1. Mark conversation as read on load
+ */
+async function clearNotifications() {
+    try {
+        await fetch('/.netlify/functions/api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ action: 'clear-support-unread' }) 
+        });
+    } catch (err) { console.error("Notification clear failed"); }
+}
+
+/**
+ * 2. Function to Add Message to UI
  */
 function appendMessage(text, senderEmail, time = 'Just now', id = null) {
     const isMe = senderEmail === currentUserEmail;
+    // Check if sender is admin or system
+    const isAdmin = senderEmail === adminEmail || senderEmail === 'admin';
+    
     const wrapper = document.createElement('div');
     if (id) wrapper.id = id;
-    wrapper.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+    wrapper.className = `flex ${isMe ? 'justify-end' : 'justify-start'} animate-fade`;
     
     wrapper.innerHTML = `
         <div class="max-w-[85%] p-3 ${isMe ? 'chat-bubble-user' : 'chat-bubble-admin'} shadow-sm">
@@ -125,17 +147,17 @@ function appendMessage(text, senderEmail, time = 'Just now', id = null) {
                 <p class="text-[8px] ${isMe ? 'text-blue-200' : 'text-slate-400'} status-text">
                     ${time}
                 </p>
-                ${isMe ? '<i class="fa-solid fa-check text-[7px] text-blue-300"></i>' : ''}
+                ${isMe ? '<i class="fa-solid fa-check text-[7px] text-blue-300 ml-1"></i>' : ''}
             </div>
         </div>
     `;
     
     dynamicMessages.appendChild(wrapper);
-    chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
+    chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
 /**
- * 2. Fetch/Refresh Conversation
+ * 3. Fetch Conversation
  */
 async function loadChatHistory(isPolling = false) {
     try {
@@ -145,36 +167,40 @@ async function loadChatHistory(isPolling = false) {
             body: JSON.stringify({ action: 'get-user-profile' }) 
         });
         const data = await response.json();
-        
         const messages = data.supportMessages || [];
 
-        // Only update if new messages exist
         if (messages.length > lastMessageCount) {
-            if (!isPolling) dynamicMessages.innerHTML = '';
-            
+            // Get only new messages if polling, otherwise clear and reload all
             const newMessages = isPolling ? messages.slice(lastMessageCount) : messages;
             
+            if (!isPolling) {
+                // Keep the initial system welcome message, clear others
+                const systemMsg = dynamicMessages.firstElementChild;
+                dynamicMessages.innerHTML = '';
+                dynamicMessages.appendChild(systemMsg);
+            }
+
             newMessages.forEach(msg => {
                 const msgTime = msg.date ? new Date(msg.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now';
                 appendMessage(msg.text, msg.sender, msgTime);
             });
 
             lastMessageCount = messages.length;
+            
+            // If we just got a new message while the window is open, mark it read
+            if(isPolling) clearNotifications(); 
         }
-    } catch (err) { 
-        console.error("Support load error:", err); 
-    }
+    } catch (err) { console.error("History Error:", err); }
 }
 
 /**
- * 3. Send New Message (Linked by Email)
+ * 4. Send Message
  */
 async function sendMessage(e) {
     e.preventDefault();
     const text = inputField.value.trim();
     if (!text) return;
 
-    // OPTIMISTIC UI: Show message immediately with "Sending..."
     const tempId = 'msg-' + Date.now();
     appendMessage(text, currentUserEmail, 'Sending...', tempId);
     inputField.value = '';
@@ -183,20 +209,16 @@ async function sendMessage(e) {
         const response = await fetch('/.netlify/functions/api', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ 
-                action: 'send-support-message', 
-                message: text 
-            })
+            body: JSON.stringify({ action: 'send-support-message', message: text })
         });
 
         if (!response.ok) throw new Error();
         
-        // Update "Sending..." to real time upon success
         const tempMsg = document.getElementById(tempId);
         if(tempMsg) {
             tempMsg.querySelector('.status-text').innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         }
-
+        lastMessageCount++; // Increment count so polling doesn't duplicate this message
     } catch (err) {
         const tempMsg = document.getElementById(tempId);
         if(tempMsg) {
@@ -207,8 +229,8 @@ async function sendMessage(e) {
     }
 }
 
-// 4. Polling for Admin Replies (Every 5 seconds)
-setInterval(() => loadChatHistory(true), 5000);
+// 5. Polling
+setInterval(() => loadChatHistory(true), 6000);
 
 function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('active');
@@ -220,7 +242,10 @@ function logout() {
     window.location.href = '/index.html'; 
 }
 
-window.onload = () => loadChatHistory(false);
+window.onload = () => {
+    loadChatHistory(false);
+    clearNotifications();
+};
 </script>
 </body>
 </html>

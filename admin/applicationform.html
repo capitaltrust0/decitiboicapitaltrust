@@ -176,6 +176,20 @@
 <script>
     let currentApps = [];
 
+
+    // --- Global Utilities ---
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('hidden');
+}
+
+function logout() {
+    sessionStorage.removeItem('adminToken');
+    window.location.href = 'admin_login.html';
+}
+
     // --- UI Navigation ---
     function showDetail() {
         document.getElementById('queueView').classList.add('hidden');
