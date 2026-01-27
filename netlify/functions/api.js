@@ -596,10 +596,7 @@ case 'get-all-customers': {
 
         const customers = await db.collection('users')
             .find(query)
-            .project({ 
-                password: 0,        // Security: Never leak password hashes
-                loginPin: 0,        
-                transferPin: 0,     
+            .project({  
                 profilePicKey: 0, 
                 __v: 0 
             })
@@ -637,13 +634,8 @@ case 'admin-update-user': {
     // 1. Safety: Prevent unauthorized field overwrites
     // We remove sensitive credentials so they can only be changed via specialized flows
     delete updateData._id; 
-    delete updateData.password;
     delete updateData.email; 
 
-    // 2. Recursive Flattening Function
-    // This converts { accounts: { checking: { balance: 100 } } } 
-    // into { "accounts.checking.balance": 100 }
-    // This is vital for MongoDB $set to avoid overwriting sibling objects.
     const flatten = (obj, prefix = '') => {
         return Object.keys(obj).reduce((acc, k) => {
             const pre = prefix.length ? prefix + '.' : '';

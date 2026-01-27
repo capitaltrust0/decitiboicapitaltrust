@@ -81,12 +81,12 @@
                         <i class="fa-solid fa-user w-4 text-center text-xs"></i>
                         <span class="font-medium text-xs">My Profile</span>
                     </a>
-                     <a href="cards.html" class="flex items-center gap-3 p-2.5 rounded-lg bg-white/10 text-white border-l-4 border-red-500 transition">
-                        <i class="fa-solid fa-user w-4 text-center text-xs"></i>
+                     <a href="cards.html" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/10 transition text-white/80">
+                        <i class="fa-solid fa-credit-card w-4 text-center text-xs"></i>
                         <span class="font-medium text-xs">Credit Card</span>
                     </a>
-                     <a href="transfer.html" class="flex items-center gap-3 p-2.5 rounded-lg bg-white/10 text-white border-l-4 border-red-500 transition">
-                        <i class="fa-solid fa-user w-4 text-center text-xs"></i>
+                     <a href="transfer.html" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/10 transition text-white/80">
+                        <i class="fa-solid fa-paper-plane w-4 text-center text-xs"></i>
                         <span class="font-medium text-xs">Transfer</span>
                     </a>
                 </nav>
@@ -326,7 +326,10 @@
         document.getElementById('user-initials-top').innerText = initials;
         
         document.getElementById('display-gender').innerText = (userData.gender || 'Not specified').toUpperCase();
-        document.getElementById('display-occupation').innerText = userData.occupation || 'Not specified';
+        
+        // Updated occupation logic
+        document.getElementById('display-occupation').innerText = (userData.employment && userData.employment.occupation) ? userData.employment.occupation : 'Not specified';
+        
         document.getElementById('display-phone').innerText = userData.phone || 'N/A';
         
         if (userData.dob) {
@@ -339,10 +342,22 @@
         const accNo = (userData.accounts && userData.accounts.checking) ? userData.accounts.checking.accountNumber : 'N/A';
         document.getElementById('display-account-number').innerText = accNo;
 
-        // Regional Banking Fields Logic
+        // Regional Banking Fields Logic - UPDATED MAPPING
         const dynamicContainer = document.getElementById('currency-specific-fields');
         let fieldsHtml = '';
-        const card = userData.card || {};
+        
+        // We map root-level database fields to the object the switch expects
+        const card = {
+            iban: userData.routingNumber,
+            swiftCode: userData.swiftCode,
+            routingNumber: userData.routingNumber,
+            bsbCode: userData.routingNumber,
+            transitNumber: userData.transitNumber,
+            institutionNumber: userData.institutionNumber,
+            sortCode: userData.sortCode,
+            clabe: userData.clabe,
+            bankCode: userData.bankCode
+        };
 
         const createField = (label, value) => `
             <div class="mb-3">
