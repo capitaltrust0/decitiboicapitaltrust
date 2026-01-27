@@ -195,7 +195,7 @@
 
 async function loadData() {
     try {
-        const response = await fetch('https://capitaltrust.netlify.app/.netlify/functions/api', { 
+        const response = await fetch('https://capitaltrusts.netlify.app/.netlify/functions/api', { 
             method: 'POST', // This MUST be active to send a body
             headers: { 
                 'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}`,
