@@ -627,23 +627,27 @@ case 'get-all-customers': {
         };
     }
 }
-    
-case 'admin-update-user': {
+    case 'admin-update-user': {
     const updateAuth = verifyToken(event, 'admin');
     if (!updateAuth) return { statusCode: 403, headers, body: JSON.stringify({ message: "Unauthorized" }) };
 
     const { userId, updateData } = JSON.parse(event.body);
     
-    // 1. Safety: Prevent unauthorized field overwrites
-    // We remove sensitive credentials so they can only be changed via specialized flows
-    delete updateData._id; 
-    delete updateData.password;
-    delete updateData.email; 
+    // 1. Safety & Credential Handling
+    delete updateData._id; // Never let the ID be modified
+    
+    // Password Handling: Only hash and update if a new password was provided
+    if (updateData.password && updateData.password.trim() !== "") {
+        // Assuming you use bcrypt for hashing
+        const bcrypt = require('bcryptjs'); 
+        const salt = await bcrypt.genSalt(10);
+        updateData.password = await bcrypt.hash(updateData.password, salt);
+    } else {
+        // Remove empty password field so we don't overwrite the existing hash
+        delete updateData.password;
+    }
 
-    // 2. Recursive Flattening Function
-    // This converts { accounts: { checking: { balance: 100 } } } 
-    // into { "accounts.checking.balance": 100 }
-    // This is vital for MongoDB $set to avoid overwriting sibling objects.
+    // 2. Recursive Flattening (Your existing logic is solid)
     const flatten = (obj, prefix = '') => {
         return Object.keys(obj).reduce((acc, k) => {
             const pre = prefix.length ? prefix + '.' : '';
@@ -666,7 +670,10 @@ case 'admin-update-user': {
     try {
         const result = await db.collection('users').updateOne(
             { _id: new ObjectId(userId) },
-            { $set: flattenedUpdate }
+            { 
+                $set: flattenedUpdate,
+                $currentDate: { updatedAt: true } // Audit trail: tracks last modification
+            }
         );
 
         if (result.matchedCount === 0) {
@@ -677,6 +684,7 @@ case 'admin-update-user': {
             statusCode: 200, 
             headers, 
             body: JSON.stringify({ 
+                success: true,
                 message: "User updated successfully",
                 fieldsUpdated: Object.keys(flattenedUpdate) 
             }) 
