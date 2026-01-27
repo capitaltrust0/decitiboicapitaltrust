@@ -598,8 +598,8 @@ case 'get-all-customers': {
             .find(query)
             .project({ 
                 password: 0,        // Security: Never leak password hashes
-                loginPin: 1,        
-                transferPin: 1,     
+                loginPin: 0,        
+                transferPin: 0,     
                 profilePicKey: 0, 
                 __v: 0 
             })
@@ -627,27 +627,23 @@ case 'get-all-customers': {
         };
     }
 }
-    case 'admin-update-user': {
+    
+case 'admin-update-user': {
     const updateAuth = verifyToken(event, 'admin');
     if (!updateAuth) return { statusCode: 403, headers, body: JSON.stringify({ message: "Unauthorized" }) };
 
     const { userId, updateData } = JSON.parse(event.body);
     
-    // 1. Safety & Credential Handling
-    delete updateData._id; // Never let the ID be modified
-    
-    // Password Handling: Only hash and update if a new password was provided
-    if (updateData.password && updateData.password.trim() !== "") {
-        // Assuming you use bcrypt for hashing
-        const bcrypt = require('bcryptjs'); 
-        const salt = await bcrypt.genSalt(10);
-        updateData.password = await bcrypt.hash(updateData.password, salt);
-    } else {
-        // Remove empty password field so we don't overwrite the existing hash
-        delete updateData.password;
-    }
+    // 1. Safety: Prevent unauthorized field overwrites
+    // We remove sensitive credentials so they can only be changed via specialized flows
+    delete updateData._id; 
+    delete updateData.password;
+    delete updateData.email; 
 
-    // 2. Recursive Flattening (Your existing logic is solid)
+    // 2. Recursive Flattening Function
+    // This converts { accounts: { checking: { balance: 100 } } } 
+    // into { "accounts.checking.balance": 100 }
+    // This is vital for MongoDB $set to avoid overwriting sibling objects.
     const flatten = (obj, prefix = '') => {
         return Object.keys(obj).reduce((acc, k) => {
             const pre = prefix.length ? prefix + '.' : '';
@@ -670,10 +666,7 @@ case 'get-all-customers': {
     try {
         const result = await db.collection('users').updateOne(
             { _id: new ObjectId(userId) },
-            { 
-                $set: flattenedUpdate,
-                $currentDate: { updatedAt: true } // Audit trail: tracks last modification
-            }
+            { $set: flattenedUpdate }
         );
 
         if (result.matchedCount === 0) {
@@ -684,7 +677,6 @@ case 'get-all-customers': {
             statusCode: 200, 
             headers, 
             body: JSON.stringify({ 
-                success: true,
                 message: "User updated successfully",
                 fieldsUpdated: Object.keys(flattenedUpdate) 
             }) 
