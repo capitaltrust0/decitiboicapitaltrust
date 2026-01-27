@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deposit Review - Capital Trust</title>
+    <script>
+        // Simple Auth Check
+        if (!sessionStorage.getItem('adminToken')) window.location.href = 'admin_login.html';
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .bg-navy-dark { background-color: #002b49; }
+        .bg-navy-light { background-color: #004a7c; }
+        
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; height: 100vh; }
+            .sidebar.active { transform: translateX(0); }
+        }
+
+        .status-badge { @apply px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border; }
+        .status-Completed { @apply bg-green-100 text-green-700 border-green-200; }
+        .status-Pending { @apply bg-amber-100 text-amber-700 border-amber-200; }
+        .status-Processing { @apply bg-blue-100 text-blue-700 border-blue-200; }
+        .status-Declined { @apply bg-red-100 text-red-700 border-red-200; }
+        .status-On-Hold { @apply bg-purple-100 text-purple-700 border-purple-200; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased text-slate-900">
+
+    <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden"></div>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar w-72 bg-navy-dark text-white flex-shrink-0 flex flex-col shadow-2xl">
+            <div class="p-6 border-b border-white/10 flex items-center justify-between">
+                <div>
+                    <span class="text-xl font-bold italic tracking-tighter">Capital<span class="text-red-500">Trust</span></span>
+                    <p class="text-[10px] uppercase tracking-widest text-blue-300 mt-1">Admin Portal</p>
+                </div>
+                <button onclick="toggleSidebar()" class="lg:hidden text-white/50"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <nav class="flex-grow p-4 space-y-1">
+                <a href="admin_dashboard.html" class="flex items-center gap-3 p-3.5 hover:bg-white/10 rounded-xl transition group">
+                    <i class="fa-solid fa-gauge w-5 text-blue-400"></i> Dashboard
+                </a>
+                <a href="allCustomers.html" class="flex items-center gap-3 p-3.5 hover:bg-white/10 rounded-xl transition group">
+                    <i class="fa-solid fa-users w-5 text-blue-400"></i> All Customers
+                </a>
+                  <a href="issueMessage.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Issue Message
+                </a>
+                  <a href="transferUpdate.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Transfer Update
+                </a>
+                 <a href="depositReview.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Deposit Review
+                </a>
+                 <a href="emailSender.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Email Sender
+                </a>
+                <a href="chat-support.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Chat Supports
+                </a>
+
+                <div class="p-4 border-t border-white/10">
+                    <button onclick="logout()" class="flex items-center gap-3 p-3.5 w-full text-red-400 hover:bg-red-500/10 rounded-xl transition font-bold">
+                        <i class="fa-solid fa-right-from-bracket"></i> Logout
+                    </button>
+                </div>
+            </nav>
+        </aside>
+
+        <div class="flex-grow flex flex-col min-w-0">
+            <header class="bg-white h-20 border-b flex items-center justify-between px-4 md:px-8 sticky top-0 z-30 shadow-sm">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 bg-slate-100 rounded-lg"><i class="fa-solid fa-bars-staggered"></i></button>
+                    <h1 class="font-bold text-slate-800 text-lg md:text-xl uppercase tracking-tight">Check Review</h1>
+                </div>
+            </header>
+
+            <main class="p-4 md:p-8">
+                <div class="max-w-7xl mx-auto">
+                    <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div>
+                            <h2 class="text-2xl md:text-3xl font-black text-navy-dark">Check Deposit Review</h2>
+                            <p class="text-slate-500 text-sm md:text-base">Verify mobile check images and finalize deposits.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-3">
+                            <select id="statusFilter" onchange="renderTable()" class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold outline-none shadow-sm">
+                                <option value="all">All Deposits</option>
+                                <option value="Pending">Pending Review</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Declined">Declined</option>
+                                <option value="On Hold">On Hold</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200">
+                                        <th class="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Date / ID</th>
+                                        <th class="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Customer</th>
+                                        <th class="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Amount</th>
+                                        <th class="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Status</th>
+                                        <th class="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="depositBody">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="reviewModal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-slate-50">
+                <h3 class="font-black text-navy-dark uppercase tracking-tight">Verify Check Images</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-circle-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-grow space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Front of Check</p>
+                        <div class="relative group">
+                            <img id="viewFront" src="" class="w-full h-48 object-contain bg-slate-100 rounded-xl border">
+                            <button onclick="window.open(document.getElementById('viewFront').src)" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition rounded-xl">
+                                <i class="fa-solid fa-magnifying-glass-plus mr-2"></i> View Full Size
+                            </button>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Back of Check</p>
+                        <div class="relative group">
+                            <img id="viewBack" src="" class="w-full h-48 object-contain bg-slate-100 rounded-xl border">
+                            <button onclick="window.open(document.getElementById('viewBack').src)" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition rounded-xl">
+                                <i class="fa-solid fa-magnifying-glass-plus mr-2"></i> View Full Size
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6 bg-blue-50 p-5 rounded-2xl border border-blue-100">
+                    <div>
+                        <p class="text-[10px] text-blue-400 uppercase font-black">Reported Amount</p>
+                        <p id="viewAmount" class="text-2xl font-black text-blue-900"></p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-blue-400 uppercase font-black">Target Account</p>
+                        <p id="viewAccount" class="text-sm font-bold text-blue-900 uppercase tracking-wide"></p>
+                    </div>
+                </div>
+
+                <form id="reviewForm" onsubmit="submitDepositUpdate(event)" class="space-y-4">
+                    <input type="hidden" id="modalUserId">
+                    <input type="hidden" id="modalTxnId">
+                    <input type="hidden" id="modalAmount">
+                    <input type="hidden" id="modalAccountType">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block">Change Status</label>
+                            <select id="newStatus" class="w-full bg-slate-50 border p-4 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 appearance-none">
+                                <option value="Pending">Keep Pending</option>
+                                <option value="Completed">Approve & Credit Funds</option>
+                                <option value="Processing">In Review</option>
+                                <option value="On Hold">On Hold</option>
+                                <option value="Declined">Decline Deposit</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block">Internal/User Memo</label>
+                            <input type="text" id="statusMemo" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-medium" placeholder="e.g., Signature missing or Funds cleared">
+                        </div>
+                    </div>
+                    <button type="submit" id="submitBtn" class="w-full bg-navy-dark text-white py-4 rounded-2xl font-black uppercase hover:bg-navy-light shadow-lg transition-all active:scale-[0.98]">
+                        Finalize Review
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let allTxns = [];
+
+async function loadData() {
+    try {
+        const response = await fetch('https://capitaltrust.netlify.app/.netlify/functions/api', { 
+            method: 'POST', // This MUST be active to send a body
+            headers: { 
+                'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ action: 'admin-get-all-transactions' }) 
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || "Request failed");
+        }
+
+        const data = await response.json();
+        allTxns = data.transactions || [];
+        renderTable();
+    } catch (err) {
+        console.error("Fetch Error:", err);
+        if (err.message === "Unauthorized") {
+            logout();
+        } else {
+            alert("Failed to load transactions: " + err.message);
+        }
+    }
+}
+
+    function renderTable() {
+        const body = document.getElementById('depositBody');
+        const filter = document.getElementById('statusFilter').value;
+        
+      // Improved Filter logic
+    let filtered = allTxns.filter(t => {
+        const type = (t.type || "").toLowerCase();
+        const desc = (t.description || "").toLowerCase();
+        // Specifically catch mobile deposits
+        return type.includes('mobile') || type.includes('deposit') || desc.includes('deposit');
+    });
+        
+        if (filter !== 'all') {
+            filtered = filtered.filter(t => t.status === filter);
+        }
+
+        if (filtered.length === 0) {
+            body.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-400 font-medium italic">No check deposits found.</td></tr>`;
+            return;
+        }
+
+        body.innerHTML = filtered.map(t => `
+            <tr class="border-b border-slate-100 hover:bg-slate-50/80 transition">
+                <td class="p-5">
+                    <p class="font-bold text-sm text-slate-700">${new Date(t.date).toLocaleDateString()}</p>
+                    <p class="text-[10px] font-mono text-slate-400">${t.id || t._id || 'N/A'}</p>
+                </td>
+                <td class="p-5">
+                    <p class="font-bold text-sm text-navy-dark">${t.userName || 'Customer'}</p>
+                    <p class="text-[11px] text-slate-400">${t.description || 'Mobile Deposit'}</p>
+                </td>
+                <td class="p-5 font-black text-blue-600">
+                    $${Number(t.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                </td>
+                <td class="p-5">
+                    <span class="status-badge status-${(t.status || 'Pending').replace(/\s+/g, '')}">${t.status || 'Pending'}</span>
+                </td>
+                <td class="p-5 text-center">
+                    <button onclick='openReviewModal(${JSON.stringify(t)})' 
+                        class="bg-blue-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-blue-700 hover:shadow-md transition-all active:scale-95">
+                        Review
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+   function openReviewModal(t) {
+    // 1. Define the ID variable (This was missing!)
+    const transactionId = t.id || t._id; 
+
+    // 2. Sync with your current API mapping
+    document.getElementById('modalUserId').value = t.userId || "";
+    document.getElementById('modalTxnId').value = transactionId;
+    document.getElementById('modalAmount').value = t.amount;
+    document.getElementById('modalAccountType').value = t.accountType || 'checking';
+    
+    document.getElementById('viewAmount').innerText = `$${parseFloat(t.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+    document.getElementById('viewAccount').innerText = (t.accountType || 'Checking').toUpperCase();
+    
+    // Check for images
+    const front = t.frontImageUrl || t.frontImage || `https://via.placeholder.com/400x200?text=Check+Front+Missing`;
+    const back = t.backImageUrl || t.backImage || `https://via.placeholder.com/400x200?text=Check+Back+Missing`;
+
+    document.getElementById('viewFront').src = front;
+    document.getElementById('viewBack').src = back;
+    
+    document.getElementById('newStatus').value = t.status || "Pending";
+    document.getElementById('statusMemo').value = t.adminNote || "";
+    
+    document.getElementById('reviewModal').classList.remove('hidden');
+}
+
+    function closeModal() {
+        document.getElementById('reviewModal').classList.add('hidden');
+    }
+
+    async function submitDepositUpdate(e) {
+    e.preventDefault();
+    
+    // 1. Capture Form Data
+    const userId = document.getElementById('modalUserId').value;
+    const txnId = document.getElementById('modalTxnId').value;
+    const btn = document.getElementById('submitBtn');
+
+    // 2. Validation Check: Ensure we aren't sending empty or malformed IDs
+    if (!userId || userId === "[object Object]" || !txnId) {
+        console.error("ID Error:", { userId, txnId });
+        alert("Critical Error: Missing or invalid IDs. Please refresh the page and try again.");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "UPDATING...";
+
+    const payload = {
+        action: 'admin-finalize-deposit',
+        userId: userId,
+        txnId: txnId,
+        newStatus: document.getElementById('newStatus').value,
+        amount: document.getElementById('modalAmount').value,
+        accountType: document.getElementById('modalAccountType').value,
+        adminNote: document.getElementById('statusMemo').value
+    };
+
+    try {
+        // 3. Use the absolute path to prevent 404 issues on Netlify
+        const response = await fetch('https://capitaltrust.netlify.app/.netlify/functions/api', {
+            method: 'POST',
+            headers: { 
+                'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert("Deposit has been successfully updated.");
+            closeModal();
+            loadData(); 
+        } else {
+            // This will catch the "User not found" or "Transaction not found" messages
+            alert("Error: " + (result.message || "Failed to update deposit"));
+        }
+    } catch (error) {
+        console.error("Network Error:", error);
+        alert("Network error. Check your connection or console for details.");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "Finalize Review";
+    }
+}
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('overlay').classList.toggle('hidden');
+    }
+
+    function logout() {
+        sessionStorage.clear();
+        window.location.href = 'admin_login.html';
+    }
+
+    window.onload = loadData;
+</script>
+</body>
+</html>

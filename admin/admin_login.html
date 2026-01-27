@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal - Capital Trust</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .btn-navy { background-color: #004a7c; transition: all 0.2s; }
+        .btn-navy:hover { background-color: #003355; }
+        .admin-card { backdrop-filter: blur(10px); }
+        .input-focus:focus { border-color: #004a7c; box-shadow: 0 0 0 2px rgba(0, 74, 124, 0.1); }
+        .hidden { display: none; }
+        .bg-navy-dark { background-color: #0f172a; }
+    </style>
+</head>
+<body class="bg-[#0f172a] min-h-screen flex flex-col font-sans">
+
+    <header class="p-6">
+        <div class="max-w-7xl mx-auto">
+            <span class="text-2xl font-bold text-white italic tracking-tighter">Capital<span class="text-red-500">Trust</span></span>
+            <span class="text-gray-500 ml-2 text-sm uppercase tracking-widest font-bold">Admin Panel</span>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center px-4">
+        <div id="login-box" class="bg-white admin-card w-full max-w-md rounded-xl shadow-2xl p-8 transition-all">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-50 text-blue-900 rounded-full mb-4">
+                    <i class="fa-solid fa-lock text-2xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800">Administrator Login</h1>
+                <p class="text-gray-500 text-sm">Triple-factor authentication required</p>
+            </div>
+
+            <form onsubmit="handleAdminLogin(event)" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Employee ID / Email</label>
+                    <input type="text" id="loginEmail" required class="w-full p-3 border border-gray-300 rounded-md outline-none input-focus" placeholder="ADM-102938">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Password</label>
+                    <div class="relative">
+                        <input type="password" id="loginPassword" required class="w-full p-3 border border-gray-300 rounded-md outline-none input-focus" placeholder="••••••••">
+                        <button type="button" onclick="togglePass('loginPassword', 'eyeLogin')" class="absolute right-3 top-3 text-gray-400 hover:text-navy">
+                            <i id="eyeLogin" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-red-700 uppercase mb-1">Master Access Key</label>
+                    <div class="relative">
+                        <input type="password" id="loginAccessKey" required class="w-full p-3 border-2 border-red-100 bg-red-50 rounded-md outline-none focus:border-red-500" placeholder="System Auth Key">
+                        <button type="button" onclick="togglePass('loginAccessKey', 'eyeKey')" class="absolute right-3 top-3 text-red-300 hover:text-red-600">
+                            <i id="eyeKey" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full btn-navy text-white py-3 rounded-md font-bold shadow-lg mt-2">
+                    Verify & Access Dashboard
+                </button>
+            </form>
+
+            <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                <p class="text-sm text-gray-600">Need a new admin account?</p>
+                <button onclick="toggleAuth('register')" class="text-blue-700 font-bold hover:underline text-sm mt-1">
+                    Request Registration
+                </button>
+            </div>
+        </div>
+
+        <div id="register-box" class="hidden bg-white admin-card w-full max-w-md rounded-xl shadow-2xl p-8 transition-all">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-red-50 text-red-600 rounded-full mb-4">
+                    <i class="fa-solid fa-user-shield text-2xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800">Create Admin Account</h1>
+                <p class="text-gray-500 text-sm">Enter professional credentials</p>
+            </div>
+
+            <form onsubmit="handleAdminRegister(event)" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Full Name</label>
+                        <input type="text" id="regName" required class="w-full p-3 border border-gray-300 rounded-md outline-none input-focus" placeholder="Jane Doe">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Branch Code</label>
+                        <input type="text" id="regBranch" required class="w-full p-3 border border-gray-300 rounded-md outline-none input-focus" placeholder="NY-01">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Official Email</label>
+                    <input type="email" id="regEmail" required class="w-full p-3 border border-gray-300 rounded-md outline-none input-focus" placeholder="admin@capitaltrust.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Choose Password</label>
+                    <div class="relative">
+                        <input type="password" id="regPassword" required class="w-full p-3 border border-gray-300 rounded-md outline-none input-focus" placeholder="••••••••">
+                        <button type="button" onclick="togglePass('regPassword', 'eyeReg')" class="absolute right-3 top-3 text-gray-400">
+                            <i id="eyeReg" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-gray-800 hover:bg-black text-white py-3 rounded-md font-bold shadow-lg mt-2 transition-colors">
+                    Continue to Authorization
+                </button>
+            </form>
+
+            <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                <button onclick="toggleAuth('login')" class="text-gray-500 font-medium hover:text-blue-900 text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-arrow-left text-xs"></i> Back to Login
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="p-6 text-center text-gray-500 text-xs">
+        <p>&copy; 2026 Capital Trust Bank Security Operations. Authorized access only.</p>
+    </footer>
+
+    <div id="authModal" class="hidden fixed inset-0 bg-navy-dark/90 backdrop-blur-md flex items-center justify-center z-[60] px-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-8 shadow-2xl border-t-4 border-red-500">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-shield-halved text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800">Security Clearance</h2>
+                <p class="text-gray-500 text-sm">Enter the Master Access Key to authorize this registration.</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="relative">
+                    <input type="password" id="modalAccessKey" 
+                        class="w-full p-3 border-2 border-gray-100 rounded-lg outline-none focus:border-red-500 text-center tracking-widest font-bold" 
+                        placeholder="••••••••">
+                    <button type="button" onclick="togglePass('modalAccessKey', 'eyeModal')" class="absolute right-3 top-3 text-gray-400">
+                        <i id="eyeModal" class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="closeAuthModal()" class="flex-1 py-3 text-gray-500 font-bold hover:bg-gray-50 rounded-lg transition">Cancel</button>
+                    <button onclick="submitAdminRegistration()" class="flex-1 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 shadow-lg transition">Authorize</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminModal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[70] px-4">
+        <div class="bg-white rounded-xl max-w-sm w-full p-8 text-center shadow-2xl">
+            <div id="modalIcon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"></div>
+            <h2 id="modalTitle" class="text-2xl font-bold text-gray-800 mb-2"></h2>
+            <p id="modalMsg" class="text-gray-600 mb-8"></p>
+            <button id="modalBtn" class="w-full btn-navy text-white py-3 rounded-md font-bold">Continue</button>
+        </div>
+    </div>
+
+<script>
+    let pendingRegData = null;
+
+    function togglePass(inputId, iconId) {
+        const field = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        if (field.type === "password") {
+            field.type = "text";
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            field.type = "password";
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    }
+
+    function toggleAuth(view) {
+        const loginBox = document.getElementById('login-box');
+        const registerBox = document.getElementById('register-box');
+        if (view === 'register') {
+            loginBox.classList.add('hidden');
+            registerBox.classList.remove('hidden');
+        } else {
+            registerBox.classList.add('hidden');
+            loginBox.classList.remove('hidden');
+        }
+    }
+
+    function showModal(title, msg, isSuccess, redirect = null) {
+        const modal = document.getElementById('adminModal');
+        const iconDiv = document.getElementById('modalIcon');
+        const btn = document.getElementById('modalBtn');
+        document.getElementById('modalTitle').innerText = title;
+        document.getElementById('modalMsg').innerText = msg;
+        
+        if (isSuccess) {
+            iconDiv.className = "w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4";
+            iconDiv.innerHTML = '<i class="fa-solid fa-check text-3xl"></i>';
+        } else {
+            iconDiv.className = "w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4";
+            iconDiv.innerHTML = '<i class="fa-solid fa-xmark text-3xl"></i>';
+        }
+
+        modal.classList.remove('hidden');
+        btn.onclick = () => {
+            if (redirect) window.location.href = redirect;
+            else modal.classList.add('hidden');
+        };
+    }
+
+    async function handleAdminLogin(e) {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const accessKey = document.getElementById('loginAccessKey').value;
+
+        try {
+            const response = await fetch('/.netlify/functions/api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'admin-login', email, password, accessKey })
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+                sessionStorage.setItem('adminToken', result.token);
+                sessionStorage.setItem('adminUser', result.adminName || email);
+                showModal("Access Granted", "Identity verified. Loading dashboard...", true, "admin_dashboard.html");
+            } else {
+                showModal("Access Denied", result.message, false);
+            }
+        } catch (error) {
+            showModal("System Error", "Connection failed.", false);
+        }
+    }
+
+    function handleAdminRegister(e) {
+        e.preventDefault();
+        pendingRegData = {
+            name: document.getElementById('regName').value,
+            branch: document.getElementById('regBranch').value,
+            email: document.getElementById('regEmail').value,
+            password: document.getElementById('regPassword').value
+        };
+        document.getElementById('authModal').classList.remove('hidden');
+        document.getElementById('modalAccessKey').focus();
+    }
+
+    function closeAuthModal() {
+        document.getElementById('authModal').classList.add('hidden');
+        document.getElementById('modalAccessKey').value = '';
+        pendingRegData = null;
+    }
+
+    async function submitAdminRegistration() {
+        const accessKey = document.getElementById('modalAccessKey').value;
+        if (!accessKey) {
+            alert("Security Key Required");
+            return;
+        }
+
+        try {
+            const response = await fetch('/.netlify/functions/api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'admin-register', 
+                    ...pendingRegData, 
+                    accessKey 
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                closeAuthModal();
+                showModal("Registration Successful", "New admin account is now active.", true);
+                toggleAuth('login');
+            } else {
+                closeAuthModal();
+                showModal("Registration Blocked", result.message, false);
+            }
+        } catch (error) {
+            showModal("System Error", "Authorization failed.", false);
+        }
+    }
+</script>
+</body>
+</html>

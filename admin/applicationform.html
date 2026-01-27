@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applications - Capital Trust</title>
+    <script>
+        if (!sessionStorage.getItem('adminToken')) {
+            window.location.href = 'admin_login.html';
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar { transition: all 0.3s; }
+        .bg-navy-dark { background-color: #002b49; }
+        .bg-navy-light { background-color: #004a7c; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; height: 100%; }
+            .sidebar.active { transform: translateX(0); }
+        }
+        .status-pill { padding: 2px 8px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+        /* Modal Animation */
+        #reviewModal.hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+
+    <div id="reviewModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black opacity-60"></div>
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl z-50 overflow-hidden relative">
+            <div class="p-6 border-b flex justify-between items-center bg-gray-50">
+                <h3 class="text-xl font-bold text-navy-dark">Detailed Application Review</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="modalContent" class="p-8 max-h-[70vh] overflow-y-auto space-y-6 text-sm">
+                </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3" id="modalFooter">
+                </div>
+        </div>
+    </div>
+
+    <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black opacity-50 z-40 lg:hidden"></div>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar w-64 bg-navy-dark text-white flex-shrink-0 flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <span class="text-xl font-bold italic tracking-tighter">Capital<span class="text-red-500">Trust</span></span>
+                <p class="text-[10px] uppercase tracking-widest text-gray-400 mt-1">Management Suite</p>
+            </div>
+            <nav class="flex-grow p-4 space-y-2">
+                <a href="admin_dashboard.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-gauge w-5"></i> Dashboard
+                </a>
+                <a href="allCustomers.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> All Customers
+                </a>
+                <a href="applicationform.html" class="flex items-center gap-3 p-3 bg-navy-light rounded-lg transition">
+                    <i class="fa-solid fa-file-invoice-dollar w-5"></i> Pending Apps
+                    <span id="pendingBadge" class="ml-auto bg-red-500 text-[10px] px-2 py-0.5 rounded-full">0</span>
+                </a>
+                 <a href="addsFund.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Add Funds
+                </a>
+                 <a href="issueMessage.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Issue Message
+                </a>
+                  <a href="transferUpdate.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Transfer Update
+                </a>
+                 <a href="depositReview.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Deposit Review
+                </a>
+                 <a href="emailSender.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Email Sender
+                </a>
+                <a href="chat-support.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Chat Supports
+                </a>
+            </nav>
+            <div class="p-4 border-t border-white/10">
+                <button onclick="logout()" class="flex items-center gap-3 p-3 w-full text-red-400 hover:bg-red-400/10 rounded-lg transition">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <div class="flex-grow flex flex-col min-w-0">
+            <header class="bg-white h-16 border-b flex items-center justify-between px-6 sticky top-0 z-30">
+                <button onclick="toggleSidebar()" class="lg:hidden text-navy-light text-xl"><i class="fa-solid fa-bars"></i></button>
+                <h1 class="font-bold text-gray-700 hidden md:block text-lg">Application Management</h1>
+                <div class="flex items-center gap-4">
+                    <div class="text-right hidden sm:block">
+                        <p id="adminDisplayName" class="text-sm font-bold text-gray-800 leading-none">Admin</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-bold" id="adminAvatar">A</div>
+                </div>
+            </header>
+
+       <main class="p-4 md:p-8">
+    <div id="queueView" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="p-6 border-b flex items-center justify-between">
+            <div>
+                <h2 class="text-lg font-bold text-gray-800">Review Queue</h2>
+                <p class="text-xs text-gray-500">Pending customer registrations</p>
+            </div>
+            <button onclick="fetchApplications()" class="p-2 hover:bg-gray-100 rounded-full transition">
+                <i class="fa-solid fa-sync text-blue-600"></i>
+            </button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 text-gray-500 text-[10px] uppercase font-bold border-b">
+                    <tr>
+                        <th class="px-6 py-4">Full Name</th>
+                        <th class="px-6 py-4">Gender</th> <th class="px-6 py-4">Account Type</th>
+                        <th class="px-6 py-4">Submission Date</th>
+                        <th class="px-6 py-4 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="appReviewBody" class="divide-y text-sm"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="detailView" class="hidden space-y-6">
+        <button onclick="showQueue()" class="flex items-center gap-2 text-navy-light font-bold hover:text-red-500 transition">
+            <i class="fa-solid fa-arrow-left"></i> Back to Queue
+        </button>
+        
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-navy-dark p-8 text-white flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="flex items-center gap-6">
+                    <div class="relative">
+                        <img id="detImage" src="" class="w-24 h-24 rounded-full border-4 border-white/20 object-cover shadow-xl bg-gray-700" alt="Applicant">
+                        <span id="detGenderBadge" class="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase shadow-lg border-2 border-navy-dark">
+                            N/A
+                        </span>
+                    </div>
+                    <div>
+                        <h2 id="detName" class="text-3xl font-bold tracking-tight">Name</h2>
+                        <p id="detEmail" class="text-blue-200"></p>
+                        <div class="mt-2 flex gap-2">
+                            <span id="detAccount" class="bg-white/10 px-3 py-1 rounded-full text-xs font-bold border border-white/10 text-white">Checking</span>
+                            <span class="bg-amber-500 px-3 py-1 rounded-full text-xs font-bold text-white">Pending Review</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-3" id="detActions"></div>
+            </div>
+
+            <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="space-y-4">
+                    <h3 class="font-bold text-gray-400 uppercase text-xs tracking-widest border-b pb-2">Identity Details</h3>
+                    <div><p class="text-xs text-gray-400">Date of Birth</p><p id="detDob" class="font-semibold"></p></div>
+                    <div><p class="text-xs text-gray-400">Gender Identity</p><p id="detGenderText" class="font-semibold capitalize text-navy-light"></p></div>
+                    <div><p class="text-xs text-gray-400">Phone Number</p><p id="detPhone" class="font-semibold"></p></div>
+                </div>
+
+                <div class="space-y-4">
+                    <h3 class="font-bold text-gray-400 uppercase text-xs tracking-widest border-b pb-2">Income & Work</h3>
+                    <div><p class="text-xs text-gray-400">Employment Status</p><p id="detWork" class="font-semibold"></p></div>
+                    <div><p class="text-xs text-gray-400">Annual Income</p><p id="detIncome" class="font-bold text-green-600 text-lg"></p></div>
+                </div>
+
+                <div class="space-y-4">
+                    <h3 class="font-bold text-gray-400 uppercase text-xs tracking-widest border-b pb-2">Resident Address</h3>
+                    <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <p id="detAddress" class="text-gray-700 leading-relaxed italic text-xs"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<script>
+    let currentApps = [];
+
+    // --- UI Navigation ---
+    function showDetail() {
+        document.getElementById('queueView').classList.add('hidden');
+        document.getElementById('detailView').classList.remove('hidden');
+    }
+
+    function showQueue() {
+        document.getElementById('detailView').classList.add('hidden');
+        document.getElementById('queueView').classList.remove('hidden');
+    }
+
+    // --- Data Fetching ---
+   async function fetchApplications() {
+        const table = document.getElementById('appReviewBody');
+        table.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-gray-400">Updating queue...</td></tr>';
+
+        try {
+            const response = await fetch('/.netlify/functions/api', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}` 
+                },
+                body: JSON.stringify({ action: 'get-dashboard-data' })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                currentApps = data.recentApplications || [];
+                document.getElementById('pendingBadge').innerText = data.pendingCount || 0;
+                table.innerHTML = '';
+                
+                currentApps.forEach(app => {
+                    const avatar = (app.profilePicUrl && app.profilePicUrl !== "") 
+                        ? app.profilePicUrl 
+                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(app.fullName)}&background=002b49&color=fff`;
+
+                    const genderBadge = app.gender === 'male' ? 'bg-blue-100 text-blue-700' : 
+                                       app.gender === 'female' ? 'bg-pink-100 text-pink-700' : 'bg-gray-100 text-gray-700';
+
+                    table.innerHTML += `
+                        <tr class="hover:bg-gray-50 transition border-b">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <img src="${avatar}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(app.fullName)}'" class="w-8 h-8 rounded-full object-cover border shadow-sm">
+                                    <div>
+                                        <div class="font-bold text-gray-800">${app.fullName}</div>
+                                        <div class="text-[10px] text-gray-400">${app.email}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${genderBadge}">${app.gender || 'N/A'}</span>
+                            </td>
+                            <td class="px-6 py-4 text-gray-600 font-medium">${app.accountType || '360 Checking'}</td>
+                            <td class="px-6 py-4 text-gray-500">${new Date(app.submittedAt).toLocaleDateString()}</td>
+                            <td class="px-6 py-4 text-center">
+                                <button onclick="openReview('${app._id}')" class="bg-navy-light text-white px-5 py-2 rounded-lg text-xs font-bold hover:bg-navy-dark transition shadow-md">Review Full App</button>
+                            </td>
+                        </tr>`;
+                });
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    function openReview(appId) {
+        const app = currentApps.find(a => a._id === appId);
+        if (!app) return;
+
+        // --- Profile Image ---
+        const imgElement = document.getElementById('detImage');
+        imgElement.src = (app.profilePicUrl && app.profilePicUrl.trim() !== "") 
+            ? app.profilePicUrl 
+            : `https://ui-avatars.com/api/?name=${encodeURIComponent(app.fullName)}&background=002b49&color=fff&size=200`;
+
+        // --- Gender Logic ---
+        const gender = (app.gender || 'unknown').toLowerCase();
+        const badge = document.getElementById('detGenderBadge');
+        badge.innerText = gender;
+        badge.className = `absolute -bottom-1 -right-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase shadow-lg border-2 border-navy-dark ${
+            gender === 'male' ? 'bg-blue-500 text-white' : gender === 'female' ? 'bg-pink-500 text-white' : 'bg-gray-500 text-white'
+        }`;
+        document.getElementById('detGenderText').innerText = gender;
+
+        // --- Standard Details ---
+        document.getElementById('detName').innerText = app.fullName || 'N/A';
+        document.getElementById('detEmail').innerText = app.email || 'N/A';
+        document.getElementById('detAccount').innerText = app.accountType || '360 Checking';
+        document.getElementById('detDob').innerText = app.dob || 'Not Provided';
+        document.getElementById('detPhone').innerText = app.phone || 'Not Provided';
+        document.getElementById('detWork').innerText = (app.employment && app.employment.status) || 'N/A';
+        document.getElementById('detIncome').innerText = `$${Number(app.employment?.income || 0).toLocaleString()}`;
+
+        // --- Address ---
+        const addr = app.address || {};
+        document.getElementById('detAddress').innerText = addr.street 
+            ? `${addr.street}, ${addr.city}, ${addr.state} ${addr.zip}, ${addr.country}`
+            : 'No address on file';
+
+        document.getElementById('detActions').innerHTML = `
+            <button onclick="processApp('${app._id}', 'Rejected')" class="px-6 py-3 border border-red-400 text-red-500 hover:bg-red-50 rounded-xl font-bold transition">Reject</button>
+            <button onclick="processApp('${app._id}', 'Approved')" class="px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold shadow-lg transition">Approve & Activate</button>
+        `;
+
+        showDetail();
+    }
+
+    async function processApp(appId, status) {
+        if (!confirm(`Are you sure you want to ${status} this application?`)) return;
+        try {
+            const response = await fetch('/.netlify/functions/api', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}` 
+                },
+                body: JSON.stringify({ action: 'admin-approve-application', applicationId: appId, status: status })
+            });
+
+            if (response.ok) {
+                alert(`Application ${status} successfully.`);
+                showQueue();
+                fetchApplications();
+            }
+        } catch (err) { alert("Error processing request."); }
+    }
+
+    window.onload = fetchApplications;
+</script>

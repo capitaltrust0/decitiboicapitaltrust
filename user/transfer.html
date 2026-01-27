@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transfer - Capital Trusts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar { transition: all 0.3s ease; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; }
+            .sidebar.active { transform: translateX(0); }
+        }
+        .bg-navy-sidebar { background-color: #004a7c; }
+        .bg-navy-dark { background-color: #002b49; }
+        .card-shadow { box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+        
+        input, select { outline: none; transition: all 0.2s; border: 1px solid #e2e8f0; }
+        input:focus, select:focus { border-color: #004a7c; background-color: white; }
+        .hidden-field { display: none !important; }
+        .verified-input { background-color: #f0fdf4 !important; border-color: #86efac !important; color: #166534 !important; }
+
+        .switch { position: relative; display: inline-block; width: 34px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #004a7c; }
+        input:checked + .slider:before { transform: translateX(14px); }
+    </style>
+</head>
+<body class="bg-[#f4f7f9] font-sans antialiased text-slate-800 text-[13px] md:text-sm">
+
+    <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar w-60 bg-navy-sidebar text-white flex flex-col flex-shrink-0 min-h-screen">
+            <div class="p-5">
+                <span class="text-lg font-bold italic tracking-tighter text-white">Capital<span class="text-red-500">Trusts</span></span>
+            </div>
+            <nav class="flex-grow px-3 space-y-1">
+                <a href="user_dashboard.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs">
+                    <i class="fa-solid fa-house text-blue-300 w-4"></i> Dashboard
+                </a>
+                <a href="user_profile.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs">
+                    <i class="fa-solid fa-user text-blue-300 w-4"></i> User Profile
+                </a>
+                <div class="bg-navy-dark rounded-md p-2.5 mb-4 flex items-center gap-3 cursor-default">
+                    <i class="fa-solid fa-paper-plane text-xs text-blue-300"></i>
+                    <span class="text-xs font-semibold text-blue-100">Transfer Funds</span>
+                </div>
+                <a href="cards.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs"><i class="fa-solid fa-credit-card w-4 text-blue-300"></i> Credit Cards</a>
+                <button onclick="logout()" class="w-full flex items-center gap-3 p-2.5 hover:bg-red-500/20 rounded-md transition text-xs mt-auto text-red-300 mb-6"><i class="fa-solid fa-right-from-bracket w-4"></i> Sign Out</button>
+            </nav>
+        </aside>
+
+        <main class="flex-grow flex flex-col min-w-0">
+            <header class="bg-white h-14 flex items-center px-4 md:px-6 border-b justify-between">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="lg:hidden text-navy-dark text-lg mr-1"><i class="fa-solid fa-bars"></i></button>
+                    <a href="user_profile.html" class="flex items-center gap-2 p-1 hover:bg-slate-50 rounded-full transition-all group">
+                        <div id="user-avatar-container" class="w-8 h-8 rounded-full bg-navy-dark text-white flex items-center justify-center font-bold text-[10px] shadow-sm overflow-hidden">
+                            <span id="user-initials">??</span>
+                        </div>
+                        <span class="hidden xs:inline text-xs font-bold text-slate-600">Account</span>
+                    </a>
+                </div>
+                <button class="text-slate-400 hover:text-navy-dark transition p-2"><i class="fa-regular fa-bell text-lg"></i></button>
+            </header>
+
+            <div class="p-4 md:p-6 max-w-2xl mx-auto w-full">
+                <div class="mb-6">
+                    <h1 class="text-lg md:text-xl font-bold text-navy-dark">Transfer Money</h1>
+                    <p class="text-slate-500 text-[11px]">Secure electronic fund transfer gateway.</p>
+                </div>
+
+                <div class="bg-white rounded-xl card-shadow border border-slate-100 p-6 md:p-8">
+                    <form id="transferForm" class="space-y-5">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">Transfer Type</label>
+                            <select id="transferType" onchange="handleTypeChange()" class="w-full bg-slate-50 rounded-lg px-3 py-2.5 text-xs font-medium">
+                                <option value="internal">Internal (Between My Accounts)</option>
+                                <option value="interbank">Capital Trust to Capital Trust (User to User)</option>
+                                <option value="domestic">Domestic Bank Transfer (ACH/Local)</option>
+                                <option value="wire">Wire Transfer (Same Day)</option>
+                                <option value="international">International Wire (SWIFT)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">Source Account</label>
+                            <select id="fromAccount" class="w-full bg-slate-50 rounded-lg px-3 py-2.5 text-xs font-medium">
+                                <option value="checking">Checking Account</option>
+                                <option value="savings">Savings Account</option>
+                            </select>
+                        </div>
+
+                        <hr class="border-slate-100">
+
+                        <div id="externalFields" class="space-y-5 hidden-field">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label id="accNoLabel" class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">Account Number</label>
+                                    <input type="text" id="recAcc" placeholder="Recipient's account number" class="w-full bg-slate-50 rounded-lg px-3 py-2.5 text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">Recipient Name</label>
+                                    <input type="text" id="recName" placeholder="Full Legal Name" class="w-full bg-slate-50 rounded-lg px-3 py-2.5 text-xs">
+                                </div>
+                            </div>
+
+                            <div id="addressFields" class="hidden-field">
+                                <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">Recipient Physical Address</label>
+                                <input type="text" id="recAddress" placeholder="Full Address (Street, City, State, ZIP)" class="w-full bg-slate-50 rounded-lg px-3 py-2.5 text-xs">
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label id="routingLabel" class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">Routing Number</label>
+                                    <input type="text" id="routing" placeholder="9-digit code" class="w-full bg-slate-50 rounded-lg px-3 py-2.5 text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">Bank Name</label>
+                                    <input type="text" id="bankName" placeholder="Bank Name" class="w-full bg-slate-50 rounded-lg px-3 py-2.5 text-xs font-semibold">
+                                </div>
+                            </div>
+
+                            <div id="extraWireFields" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden-field">
+                                <div>
+                                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">Account Type</label>
+                                    <select id="accType" class="w-full bg-slate-50 rounded-lg px-3 py-2.5 text-xs">
+                                        <option value="personal">Personal Account</option>
+                                        <option value="business">Business Account</option>
+                                    </select>
+                                </div>
+                                <div id="bankAddressGroup" class="hidden-field">
+                                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">Bank Physical Address</label>
+                                    <input type="text" id="bankAddress" placeholder="City, Country" class="w-full bg-slate-50 rounded-lg px-3 py-2.5 text-xs">
+                                </div>
+                            </div>
+
+                            <div id="purposeGroup" class="hidden-field">
+                                <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">Purpose of Payment</label>
+                                <input type="text" id="purpose" placeholder="e.g., Family Support, Invoice #123" class="w-full bg-slate-50 rounded-lg px-3 py-2.5 text-xs">
+                            </div>
+
+                            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-navy-sidebar">Save Beneficiary</span>
+                                    <span class="text-[10px] text-slate-500">Add to your frequent contacts list</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="saveBeneficiary">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="toAccountContainer">
+                            <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">To Account</label>
+                            <select id="toAccount" class="w-full bg-slate-50 rounded-lg px-3 py-2.5 text-xs font-medium">
+                                <option value="savings">Savings Account</option>
+                                <option value="checking">Checking Account</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">Memo / Description</label>
+                            <input type="text" id="memo" placeholder="What is this for?" class="w-full bg-slate-50 rounded-lg px-3 py-2.5 text-xs">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">Amount</label>
+                            <div class="relative">
+                                <span id="currencySymbol" class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-lg">$</span>
+                                <input type="number" id="amount" step="0.01" placeholder="0.00" required class="w-full bg-slate-50 rounded-lg pl-10 pr-4 py-3 text-lg font-bold text-navy-dark">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-navy-sidebar text-white font-bold py-3 rounded-lg hover:bg-navy-dark transition-all transform active:scale-[0.98] mt-4 shadow-lg shadow-blue-900/20">
+                            Review Transaction
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+  <div id="transferModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-navy-dark/60 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 md:p-8 shadow-2xl text-center overflow-hidden">
+        
+        <div id="modalPreview">
+            <h3 class="text-lg font-bold text-navy-dark mb-4">Confirm Details</h3>
+            <div class="bg-slate-50 rounded-xl p-4 text-left space-y-3 mb-6">
+                <div class="flex justify-between border-b border-slate-200 pb-2">
+                    <span class="text-slate-400 text-[10px] uppercase font-bold tracking-tight">Recipient</span>
+                    <span id="previewName" class="text-xs font-bold text-navy-sidebar truncate ml-2">---</span>
+                </div>
+                <div id="previewExternalDetails" class="space-y-3">
+                    <div class="flex justify-between border-b border-slate-200 pb-2">
+                        <span class="text-slate-400 text-[10px] uppercase font-bold tracking-tight">Account / IBAN</span>
+                        <span id="previewAcc" class="text-xs font-medium text-slate-600">---</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-200 pb-2">
+                        <span class="text-slate-400 text-[10px] uppercase font-bold tracking-tight">Bank / Route</span>
+                        <span id="previewBank" class="text-xs font-medium text-slate-600 truncate ml-2">---</span>
+                    </div>
+                </div>
+                <div class="flex justify-between border-b border-slate-200 pb-2">
+                    <span class="text-slate-400 text-[10px] uppercase font-bold tracking-tight">Amount</span>
+                    <span id="previewAmount" class="text-xs font-bold text-navy-sidebar">---</span>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeModal()" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-lg text-xs">Edit</button>
+                <button onclick="showPinEntry()" class="flex-1 bg-navy-sidebar text-white font-bold py-3 rounded-lg text-xs shadow-lg shadow-blue-900/20">Next</button>
+            </div>
+        </div>
+
+        <div id="modalPinEntry" class="hidden">
+            <div class="w-12 h-12 bg-blue-50 text-navy-sidebar rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-lock text-lg"></i>
+            </div>
+            <h3 class="text-lg font-bold text-navy-dark">Authorize Transfer</h3>
+            <p class="text-slate-500 text-[11px] mt-1 mb-6">Enter your 4-digit security PIN to authorize this transaction.</p>
+            
+            <input type="password" id="transferPin" maxlength="4" inputmode="numeric" placeholder="****" 
+                class="w-32 text-center text-2xl tracking-[1rem] font-bold border-2 border-slate-200 rounded-lg py-3 focus:border-navy-sidebar mb-6">
+            
+            <div class="flex gap-3">
+                <button onclick="backToPreview()" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-lg text-xs">Back</button>
+                <button id="finalConfirmBtn" class="flex-1 bg-navy-sidebar text-white font-bold py-3 rounded-lg text-xs">Confirm & Send</button>
+            </div>
+        </div>
+
+        <div id="modalError" class="hidden">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-circle-exclamation"></i>
+            </div>
+            <h3 class="text-lg font-bold text-navy-dark">Transaction Declined</h3>
+            
+            <div class="mt-5 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-left">
+                <p id="errorMessage" class="text-red-700 text-[11px] leading-relaxed font-medium">
+                    </p>
+            </div>
+            
+            <button onclick="closeModal()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-lg mt-6 hover:bg-navy-dark transition-all text-xs">
+                Acknowledge
+            </button>
+        </div>
+
+        <div id="modalLoading" class="hidden py-6">
+            <div class="inline-block w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+            <h3 class="text-lg font-bold text-navy-dark">Verifying Transaction</h3>
+            <p class="text-slate-500 text-xs mt-2">Connecting to clearing house...</p>
+        </div>
+
+        <div id="modalSuccess" class="hidden">
+            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <h3 class="text-lg font-bold text-navy-dark">Transfer Initiated</h3>
+            <p class="text-slate-500 text-xs mt-2">Your request of <span id="finalAmount" class="font-bold text-navy-dark"></span> has been queued.</p>
+            <p id="refNumber" class="text-[10px] text-slate-400 font-mono mt-4 uppercase tracking-widest"></p>
+            <button onclick="window.location.href='user_dashboard.html'" class="w-full bg-navy-sidebar text-white font-bold py-3 rounded-lg mt-6 hover:bg-navy-dark transition-all text-xs">
+                Return to Dashboard
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+    const token = sessionStorage.getItem('userToken');
+    const currencyMap = { 
+        'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'CNY': '¥', 'ZAR': 'R', 'INR': '₹', 'CAD': 'CA$', 'AUD': 'AU$',
+        'MXN': '$', 'PHP': '₱' 
+    };
+
+    const currencyConfig = {
+        'USD': { routingLabel: 'ABA Routing Number', routingPlaceholder: '9-digit wire code', accNoLabel: 'Account Number' },
+        'EUR': { routingLabel: 'BIC / SWIFT', routingPlaceholder: '8 or 11 characters', accNoLabel: 'IBAN Number' },
+        'GBP': { routingLabel: 'Sort Code', routingPlaceholder: 'XX-XX-XX', accNoLabel: 'Account Number' },
+        'MXN': { routingLabel: 'CLABE', routingPlaceholder: '18-digit CLABE number', accNoLabel: 'Account Number' },
+        'PHP': { routingLabel: 'BRSTN Code', routingPlaceholder: '9-digit bank code', accNoLabel: 'Account Number' },
+        'ZAR': { routingLabel: 'Branch Code', routingPlaceholder: '6-digit code', accNoLabel: 'Account Number' },
+        'INR': { routingLabel: 'IFSC Code', routingPlaceholder: '11-character code', accNoLabel: 'Account Number' },
+        'CAD': { routingLabel: 'Transit Number', routingPlaceholder: 'XXXXX-XXX', accNoLabel: 'Account Number' },
+        'AUD': { routingLabel: 'BSB Code', routingPlaceholder: '6-digit code', accNoLabel: 'Account Number' },
+        'JPY': { routingLabel: 'Bank Code', routingPlaceholder: '4-digit code', accNoLabel: 'Account Number' },
+        'CNY': { routingLabel: 'SWIFT / CNAPS', routingPlaceholder: '12-digit code', accNoLabel: 'Account Number' }
+    };
+
+    let userCurrency = 'USD';
+    let currentBalances = { checking: 0, savings: 0 };
+    let lookupTimeout;
+
+    if (!token) window.location.href ='/index.html';
+    
+    async function loadUserData() {
+        try {
+            const response = await fetch('/.netlify/functions/api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ action: 'get-user-profile' })
+            });
+            
+            const userData = await response.json();
+            if (!userData || response.status !== 200) throw new Error("Session expired");
+
+            userCurrency = userData.currency || 'USD'; 
+            document.getElementById('user-initials').innerText = `${userData.firstName[0]}${userData.lastName[0]}`.toUpperCase();
+            
+            currentBalances.checking = userData.accounts.checking.balance;
+            currentBalances.savings = userData.accounts.savings.balance;
+            
+            updateFormStructure(); 
+            updateBalanceDropdowns(userData);
+        } catch (err) { 
+            console.error("Error loading profile:", err);
+            logout(); 
+        }
+    }
+
+    function updateFormStructure() {
+        const config = currencyConfig[userCurrency] || currencyConfig['USD'];
+        const symbol = currencyMap[userCurrency] || '$';
+        document.getElementById('currencySymbol').innerText = symbol;
+
+        const rLabel = document.getElementById('routingLabel');
+        const rInput = document.getElementById('routing');
+        const aLabel = document.getElementById('accNoLabel');
+        const aInput = document.getElementById('recAcc');
+
+        if (rLabel && rInput) {
+            rLabel.innerText = config.routingLabel;
+            rInput.placeholder = config.routingPlaceholder;
+        }
+        if (aLabel && aInput) {
+            aLabel.innerText = config.accNoLabel;
+            aInput.placeholder = (userCurrency === 'EUR') ? 'e.g. DE89 3704 ...' : "Recipient's account number";
+        }
+    }
+
+    function updateBalanceDropdowns(userData) {
+        const symbol = currencyMap[userCurrency] || '$';
+        const formatter = new Intl.NumberFormat('en-US', { 
+            style: 'currency', 
+            currency: userCurrency,
+            currencyDisplay: 'symbol'
+        });
+
+        const cLabel = `Checking (...${userData.accounts.checking.accountNumber.slice(-4)}) - ${formatter.format(currentBalances.checking)}`;
+        const sLabel = `Savings (...${userData.accounts.savings.accountNumber.slice(-4)}) - ${formatter.format(currentBalances.savings)}`;
+        
+        document.querySelectorAll('option[value="checking"]').forEach(el => el.innerText = cLabel);
+        document.querySelectorAll('option[value="savings"]').forEach(el => el.innerText = sLabel);    
+    }
+
+    function handleTypeChange() {
+        const type = document.getElementById('transferType').value;
+        const boxes = {
+            internal: document.getElementById('toAccountContainer'),
+            external: document.getElementById('externalFields'),
+            address: document.getElementById('addressFields'),
+            wire: document.getElementById('extraWireFields'),
+            bankAddr: document.getElementById('bankAddressGroup'),
+            purpose: document.getElementById('purposeGroup')
+        };
+
+        Object.values(boxes).forEach(el => el && el.classList.add('hidden-field'));
+        const rInput = document.getElementById('routing');
+        const bankField = document.getElementById('bankName');
+
+        bankField.readOnly = false;
+        bankField.classList.remove('bg-slate-50', 'bg-green-50', 'cursor-not-allowed', 'verified-input');
+        bankField.value = "";
+        rInput.readOnly = false;
+        rInput.value = "";
+
+        if (type === 'internal') {
+            boxes.internal.classList.remove('hidden-field');
+        } else if (type === 'interbank') {
+            boxes.external.classList.remove('hidden-field');
+            document.getElementById('routingLabel').innerText = "Network Code";
+            rInput.value = "CT-SYSTEM-01";
+            rInput.readOnly = true;
+            bankField.value = "Capital Trust Bank";
+            bankField.readOnly = true;
+            bankField.classList.add('verified-input', 'bg-green-50', 'cursor-not-allowed');
+        } else {
+            boxes.external.classList.remove('hidden-field');
+            updateFormStructure(); 
+            if (type === 'wire' || type === 'international') {
+                boxes.address.classList.remove('hidden-field');
+                boxes.wire.classList.remove('hidden-field');
+                if (type === 'international') {
+                    boxes.bankAddr.classList.remove('hidden-field');
+                    boxes.purpose.classList.remove('hidden-field');
+                }
+            }
+        }
+    }
+
+    // --- FORM SUBMISSION (SHOW PREVIEW) ---
+    document.getElementById('transferForm').onsubmit = function(e) {
+        e.preventDefault();
+        const amount = parseFloat(document.getElementById('amount').value);
+        const fromAcc = document.getElementById('fromAccount').value;
+        const transferType = document.getElementById('transferType').value;
+        const symbol = currencyMap[userCurrency] || '$';
+        
+        let recDisplayName = "";
+        const externalDetailsBox = document.getElementById('previewExternalDetails');
+
+        if (transferType === 'internal') {
+            const toAccValue = document.getElementById('toAccount').value;
+            if (fromAcc === toAccValue) { alert("Source and Destination accounts cannot be the same."); return; }
+            recDisplayName = toAccValue === 'savings' ? "My Savings Account" : "My Checking Account";
+            externalDetailsBox.classList.add('hidden'); 
+        } else {
+            recDisplayName = document.getElementById('recName').value || "External Recipient";
+            document.getElementById('previewAcc').innerText = document.getElementById('recAcc').value;
+            document.getElementById('previewBank').innerText = `${document.getElementById('bankName').value} (${document.getElementById('routing').value})`;
+            externalDetailsBox.classList.remove('hidden');
+        }
+
+        if (amount > currentBalances[fromAcc]) {
+            alert(`Insufficient funds. Your balance is ${symbol}${currentBalances[fromAcc].toLocaleString()}`);
+            return;
+        }
+
+        document.getElementById('previewName').innerText = recDisplayName;
+        document.getElementById('previewAmount').innerText = `${symbol}${amount.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+
+        resetModalStates();
+        document.getElementById('transferModal').classList.remove('hidden');
+        document.getElementById('modalPreview').classList.remove('hidden');
+    };
+
+    function showPinEntry() {
+        document.getElementById('modalPreview').classList.add('hidden');
+        document.getElementById('modalPinEntry').classList.remove('hidden');
+        document.getElementById('transferPin').value = ''; 
+        document.getElementById('transferPin').focus();
+    }
+
+    function backToPreview() {
+        document.getElementById('modalPinEntry').classList.add('hidden');
+        document.getElementById('modalPreview').classList.remove('hidden');
+    }
+
+    // --- FINAL API CALL (WITH BLOCK CHECK & LETTER BOX ERROR) ---
+    document.getElementById('finalConfirmBtn').onclick = async function() {
+        const pin = document.getElementById('transferPin').value;
+        if (pin.length !== 4) { alert("Please enter your 4-digit security PIN."); return; }
+
+        const loader = document.getElementById('modalLoading');
+        const pinEntry = document.getElementById('modalPinEntry');
+        const errorBox = document.getElementById('modalError');
+        const errorText = document.getElementById('errorMessage');
+        const success = document.getElementById('modalSuccess');
+
+        pinEntry.classList.add('hidden');
+        loader.classList.remove('hidden');
+
+        try {
+            const response = await fetch('/.netlify/functions/api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    action: 'process-transfer',
+                    transferPin: pin,
+                    fromAccount: document.getElementById('fromAccount').value,
+                    toAccount: document.getElementById('transferType').value === 'internal' ? document.getElementById('toAccount').value : null,
+                    amount: document.getElementById('amount').value,
+                    transferType: document.getElementById('transferType').value,
+                    recName: document.getElementById('recName').value || 'Self',
+                    recAccount: document.getElementById('recAcc').value,
+                    routingCode: document.getElementById('routing').value,
+                    memo: document.getElementById('memo').value || "Funds Transfer",
+                    bankName: document.getElementById('bankName').value
+                })
+            });
+
+            const result = await response.json();
+            
+            // IF BLOCKED (403) OR WRONG PIN
+            if (response.status === 403) {
+                loader.classList.add('hidden');
+                errorBox.classList.remove('hidden');
+                errorText.innerText = result.message;
+                return;
+            }
+
+            if (!response.ok) throw new Error(result.message || "Transfer failed.");
+
+            // SUCCESS FLOW
+            setTimeout(() => {
+                loader.classList.add('hidden');
+                success.classList.remove('hidden');
+                document.getElementById('finalAmount').innerText = `${currencyMap[userCurrency]}${parseFloat(document.getElementById('amount').value).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                document.getElementById('refNumber').innerText = `Ref: ${result.transactionId}`;
+                loadUserData(); 
+            }, 1500);
+
+        } catch (err) {
+            loader.classList.add('hidden');
+            pinEntry.classList.remove('hidden');
+            alert("System Error: " + err.message);
+        }
+    };
+
+    function resetModalStates() {
+        ['modalPreview', 'modalPinEntry', 'modalLoading', 'modalSuccess', 'modalError'].forEach(id => {
+            document.getElementById(id).classList.add('hidden');
+        });
+    }
+
+    function closeModal() {
+        document.getElementById('transferModal').classList.add('hidden');
+    }
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('overlay').classList.toggle('hidden');
+    }
+    
+    function logout() { sessionStorage.clear(); window.location.href = '/index.html'; }
+    window.onload = loadUserData;
+</script>
+</body>
+</html>

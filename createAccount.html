@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Started - Capital Trusts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .btn-navy {
+            background-color: #004a7c;
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-navy:hover {
+            background-color: #003355;
+        }
+        .progress-nav {
+            background-color: #004a7c;
+        }
+        .input-field {
+            border: 1px solid #717171;
+            border-radius: 4px;
+            padding: 12px;
+            width: 100%;
+            outline: none;
+            background-color: white;
+        }
+        .input-field:focus {
+            border-color: #004a7c;
+            box-shadow: 0 0 0 1px #004a7c;
+        }
+        
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        @media (max-width: 640px) {
+            .mobile-full {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin-top: 0 !important;
+                border-radius: 0 !important;
+            }
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-[#f4f7f9] font-sans min-h-screen">
+
+    <header class="bg-white border-b py-4 px-4 md:px-0">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="text-xl font-bold text-blue-900 italic tracking-tighter">Capital<span class="text-red-600">Trusts</span></span>
+                <span class="text-gray-400 mx-1 md:mx-2">|</span>
+                <span class="text-gray-700 font-medium text-sm md:text-base">360 Checking</span>
+            </div>
+            <div class="hidden sm:block text-blue-800 font-bold text-sm">
+                1-800-TRUSTS-CT
+            </div>
+            <div class="sm:hidden text-blue-800">
+                <i class="fa-solid fa-phone"></i>
+            </div>
+        </div>
+    </header>
+
+    <div id="intro-section">
+        <main class="max-w-2xl mx-auto mt-0 sm:mt-10 px-0 sm:px-4 pb-20 mobile-full">
+            <div class="bg-white rounded-none sm:rounded-lg shadow-sm overflow-hidden border-b sm:border border-gray-200">
+                <div class="bg-gradient-to-b from-blue-500 to-blue-700 h-40 md:h-52 flex flex-col items-center justify-center text-white text-center px-6">
+                    <div class="mb-3 text-3xl md:text-4xl">
+                        <i class="fa-solid fa-mountain-sun opacity-90"></i>
+                    </div>
+                    <h1 class="text-2xl md:text-3xl font-bold mb-1">Let's get started</h1>
+                    <p class="text-blue-100 text-sm md:text-base">You're 5 minutes away from banking reimagined.</p>
+                </div>
+
+                <div class="p-6 md:p-10 space-y-8 md:space-y-12">
+                    <div class="flex items-start gap-4 md:gap-6">
+                        <div class="bg-blue-50 p-3 md:p-4 rounded-full text-blue-600 text-lg md:text-xl flex-shrink-0">
+                            <i class="fa-solid fa-id-card"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-gray-800 text-base md:text-lg">Identity Information</h2>
+                            <p class="text-gray-600 text-sm md:text-base leading-relaxed">
+                                We'll ask for details like your <span class="font-semibold text-gray-800">legal name, address</span>, and <span class="font-semibold text-gray-800">contact email and phone number</span>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4 md:gap-6">
+                        <div class="bg-amber-50 p-3 md:p-4 rounded-full text-amber-600 text-lg md:text-xl flex-shrink-0">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-gray-800 text-base md:text-lg">Ensure Accuracy</h2>
+                            <p class="text-gray-600 text-sm md:text-base leading-relaxed">
+                                Please make sure all information is <span class="font-semibold text-gray-800">input correctly</span>. Your details must match your government-issued ID exactly to prevent delays.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4 md:gap-6">
+                        <div class="bg-green-50 p-3 md:p-4 rounded-full text-green-600 text-lg md:text-xl flex-shrink-0">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-gray-800 text-base md:text-lg">Immediate Access</h2>
+                            <p class="text-gray-600 text-sm md:text-base leading-relaxed">
+                                Once your application is approved, we'll provide your <span class="font-semibold text-gray-800">routing and account numbers</span> immediately.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-5 rounded-md border border-gray-100">
+                        <h3 class="font-bold text-gray-800 text-sm mb-2">Looking to open a joint account?</h3>
+                        <p class="text-xs md:text-sm text-gray-600 leading-relaxed">
+                            First, you'll need to open an individual account. Then, you can add the other person as a joint account holder via your online dashboard.
+                        </p>
+                    </div>
+
+                    <div class="pt-2 text-center">
+                        <button onclick="goToForm()" class="w-full btn-navy text-white py-4 rounded-md font-bold text-lg shadow-md mb-6 active:scale-[0.98] transition-transform">
+                            Continue
+                        </button>
+                        <button class="text-blue-600 font-bold hover:underline text-sm md:text-base">
+                            I have a promo code
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="form-section" class="hidden">
+        <nav class="progress-nav text-white text-[10px] font-bold uppercase tracking-wider py-2">
+            <div class="max-w-6xl mx-auto flex justify-around px-4">
+                <span id="nav-personal" class="border-b-2 border-white pb-1">Personal Info</span>
+                <span id="nav-identity" class="opacity-50">Identity</span>
+                <span id="nav-fund" class="opacity-50">Fund</span>
+            </div>
+        </nav>
+
+        <main class="max-w-2xl mx-auto mt-10 px-4 pb-20">
+            <button onclick="goBack()" class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-100 mb-6 transition">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+
+           <div id="name-step" class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 md:p-12">
+                <h1 class="text-3xl font-light text-gray-800 mb-2">What's your name?</h1>
+                <p class="text-gray-600 mb-8">Enter your <span class="text-red-700 font-medium">legal name</span> and gender.</p>
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">First Name</label>
+                            <input type="text" id="firstName" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Last Name</label>
+                            <input type="text" id="lastName" class="input-field">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Gender</label>
+                        <select id="gender" class="input-field">
+                            <option value="" disabled selected>Select your gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <button onclick="handleNameContinue()" class="w-full btn-navy text-white py-3 rounded font-bold text-lg mt-4 shadow-sm flex items-center justify-center gap-3">
+                        <span id="nameBtnText">Continue</span>
+                        <div id="nameBtnSpinner" class="spinner"></div>
+                    </button>
+                </div>
+            </div>
+
+            <div id="address-step" class="hidden bg-white rounded-lg shadow-sm border border-gray-200 p-8 md:p-12">
+                <h1 class="text-3xl font-light text-gray-800 mb-2">Residential Address</h1>
+                <p class="text-gray-600 mb-8">Please provide your primary residence address as it appears on official documents.</p>
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Country</label>
+                        <select id="countrySelect" class="input-field" onchange="updateAddressLabels()">
+                            <optgroup label="North America">
+                                <option value="US">United States</option>
+                                <option value="MX">Mexico</option>
+                            </optgroup>
+                            <optgroup label="Euro Zone">
+                                <option value="DE">Germany</option>
+                                <option value="FR">France</option>
+                                <option value="IT">Italy</option>
+                                <option value="ES">Spain</option>
+                                <option value="NL">Netherlands</option>
+                                <option value="BE">Belgium</option>
+                                <option value="IE">Ireland</option>
+                                <option value="AT">Austria</option>
+                                <option value="PT">Portugal</option>
+                                <option value="FI">Finland</option>
+                                <option value="GR">Greece</option>
+                                <option value="LU">Luxembourg</option>
+                            </optgroup>
+                            <optgroup label="Other">
+                                <option value="UK">United Kingdom</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Street Address</label>
+                        <input type="text" id="streetAddress" class="input-field" placeholder="House number and street name">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="md:col-span-1">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">City</label>
+                            <input type="text" id="city" class="input-field">
+                        </div>
+                        <div>
+                            <label id="stateLabel" class="block text-sm font-bold text-gray-700 mb-2">State</label>
+                            <input type="text" id="state" class="input-field">
+                        </div>
+                        <div>
+                            <label id="zipLabel" class="block text-sm font-bold text-gray-700 mb-2">ZIP Code</label>
+                            <input type="text" id="zipCode" class="input-field">
+                        </div>
+                    </div>
+                    <button onclick="handleAddressContinue()" class="w-full btn-navy text-white py-3 rounded font-bold text-lg mt-4 shadow-sm flex items-center justify-center gap-3">
+                        <span id="addrBtnText">Continue</span>
+                        <div id="addrBtnSpinner" class="spinner"></div>
+                    </button>
+                </div>
+            </div>
+
+        <div id="contact-step" class="hidden bg-white rounded-lg shadow-sm border border-gray-200 p-8 md:p-12">
+    <h1 class="text-3xl font-light text-gray-800 mb-2">Contact Details</h1>
+    <p class="text-gray-600 mb-8">How should we reach you regarding your account?</p>
+    
+    <div class="space-y-6">
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
+            <input type="email" id="email" class="input-field" placeholder="name@example.com">
+        </div>
+
+       <div>
+    <label class="block text-sm font-bold text-gray-700 mb-2">Phone Number</label>
+    <div class="flex">
+        <select id="phoneCountrySelect" 
+                onchange="updatePhoneConfig(this.value)"
+                class="inline-flex items-center px-2 rounded-l border border-r-0 border-gray-300 bg-gray-50 text-gray-600 font-medium cursor-pointer focus:outline-none">
+           <option value="US">🇺🇸 +1</option>
+    <option value="CA">🇨🇦 +1</option>
+    <option value="MX">🇲🇽 +52</option>
+    <option value="UK">🇬🇧 +44</option>
+    <option value="CH">🇨🇭 +41</option> 
+    <option value="PT">🇵🇹 +351</option> 
+    <option value="DE">🇩🇪 +49</option>
+    <option value="FR">🇫🇷 +33</option>
+    <option value="IT">🇮🇹 +39</option>
+    <option value="ES">🇪🇸 +34</option>
+    <option value="NL">🇳🇱 +31</option> 
+    <option value="BE">🇧🇪 +32</option>
+     <option value="IE">🇮🇪 +353</option>
+      <option value="AU">🇦🇺 +61</option>
+    <option value="NZ">🇳🇿 +64</option>
+    <option value="PH">🇵🇭 +63</option>
+        </select>
+        
+        <input type="tel" id="phone" 
+            class="input-field rounded-l-none flex-1" 
+            placeholder="2025550123"
+            oninput="this.value = this.value.replace(/\D/g, '')"> 
+    </div>
+    <p id="phoneHelpText" class="text-xs text-gray-500 mt-1">Enter digits only. We'll handle the formatting.</p>
+</div>
+
+        <div class="flex flex-col gap-3">
+            <button onclick="handleContactSubmit()" id="contactBtn" class="w-full btn-navy text-white py-3 rounded font-bold text-lg mt-4 shadow-sm flex items-center justify-center gap-3">
+                <span id="contactBtnText">Continue</span>
+                <div id="contactBtnSpinner" class="spinner" style="display: none;"></div>
+            </button>
+            
+            <button onclick="goBack()" class="text-gray-500 text-sm font-medium hover:text-gray-700 transition">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Address
+            </button>
+        </div>
+    </div>
+</div>
+
+            <div id="employment-step" class="hidden bg-white rounded-lg shadow-sm border border-gray-200 p-8 md:p-12">
+                <h1 class="text-3xl font-light text-gray-800 mb-2">Current Employment</h1>
+                <p class="text-gray-600 mb-8">Tell us a bit about your professional life and income.</p>
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Employment Status</label>
+                        <input type="text" id="employmentStatus" class="input-field" placeholder="e.g. Full-time, Self-employed, Student">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">What's your annual income?</label>
+                        <input type="text" id="annualIncome" class="input-field" placeholder="e.g. $50,000">
+                    </div>
+                    <button onclick="handleEmploymentSubmit()" class="w-full btn-navy text-white py-3 rounded font-bold text-lg mt-4 shadow-sm flex items-center justify-center gap-3">
+                        <span id="empBtnText">Continue</span>
+                        <div id="empBtnSpinner" class="spinner"></div>
+                    </button>
+                </div>
+            </div>
+
+            <div id="identity-step" class="hidden bg-white rounded-lg shadow-sm border border-gray-200 p-8 md:p-12">
+                <h1 class="text-3xl font-light text-gray-800 mb-2">Secure your account</h1>
+                <p class="text-gray-600 mb-8">Create a strong password to protect your banking information.</p>
+                
+                <div class="space-y-6">
+                    <div class="relative">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Create Password</label>
+                        <div class="relative">
+                            <input type="password" id="password" class="input-field pr-12" placeholder="At least 8 characters">
+                            <button type="button" onclick="togglePassword('password', 'eye-icon-1')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-900">
+                                <i id="eye-icon-1" class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Confirm Password</label>
+                        <div class="relative">
+                            <input type="password" id="confirmPassword" class="input-field pr-12" placeholder="Repeat your password">
+                            <button type="button" onclick="togglePassword('confirmPassword', 'eye-icon-2')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-900">
+                                <i id="eye-icon-2" class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr class="border-gray-100 my-4">
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Date of Birth</label>
+                        <input type="date" id="dob" class="input-field">
+                        <p class="text-xs text-gray-400 mt-1 italic">Must be at least 18 years old.</p>
+                    </div>
+                    
+                  <div class="pt-2">
+                <label class="block text-sm font-bold text-gray-700 mb-2">Profile Picture</label>
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer group" onclick="document.getElementById('profilePicUpload').click()">
+                    <input type="file" id="profilePicUpload" class="hidden" accept="image/*">
+                    
+                    <div id="uploadPreview" class="text-gray-500 flex flex-col items-center">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-2 group-hover:bg-blue-50 transition-colors">
+                            <i class="fa-solid fa-user text-3xl"></i>
+                        </div>
+                        <p class="text-sm font-bold">Click to upload photo</p>
+                        <p class="text-xs">Provide a clear headshot for your account profile</p>
+                    </div>
+                </div>
+            </div>
+
+                    <button onclick="handleIdentitySubmit()" class="w-full btn-navy text-white py-3 rounded font-bold text-lg mt-4 shadow-sm flex items-center justify-center gap-3">
+                        <span id="idBtnText">Continue</span>
+                        <div id="idBtnSpinner" class="spinner"></div>
+                    </button>
+                </div>
+            </div>
+
+            <div id="successModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+                <div class="bg-white rounded-xl max-w-sm w-full p-8 text-center shadow-2xl transform transition-all">
+                    <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-check text-3xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Application Submitted!</h2>
+                    <p class="text-gray-600 mb-8">We will review your documents and email you shortly with the next steps.</p>
+                    <button onclick="window.location.href='index.html'" class="w-full btn-navy text-white py-3 rounded-md font-bold hover:opacity-90 transition-opacity">
+                        Return to Home
+                    </button>
+                </div>
+            </div>
+
+            <div id="terms-step" class="hidden bg-white rounded-lg shadow-sm border border-gray-200 p-8 md:p-12">
+                <h1 class="text-3xl font-light text-gray-800 mb-2">Terms & Conditions</h1>
+                <p class="text-gray-600 mb-6">Final step! Review and accept our banking agreements.</p>
+                
+                <div class="bg-gray-50 border border-gray-200 rounded p-4 h-48 overflow-y-scroll text-sm text-gray-600 mb-6 leading-relaxed">
+                    <h4 class="font-bold text-gray-800 mb-2">1. Deposit Account Agreement</h4>
+                    <p class="mb-4">By clicking "I Agree", you are applying for a 360 Checking account and agree to the terms of the Capital Trusts Deposit Account Agreement, including the fee schedule and electronic communications policy...</p>
+                    <h4 class="font-bold text-gray-800 mb-2">2. Privacy Notice</h4>
+                    <p class="mb-4">We protect your data using industry-standard encryption. Your information is used solely for the purpose of maintaining your account and identity verification as required by federal law...</p>
+                    <h4 class="font-bold text-gray-800 mb-2">3. Electronic Records Consent</h4>
+                    <p>You agree to receive all disclosures, statements, and notices electronically via the email provided during registration. You may withdraw consent at any time through your dashboard.</p>
+                </div>
+
+                <div class="flex items-start gap-3 mb-8">
+                    <input type="checkbox" id="termsCheck" class="mt-1 h-4 w-4 rounded border-gray-300 text-blue-900 focus:ring-blue-900">
+                    <label for="termsCheck" class="text-sm text-gray-700 cursor-pointer">
+                        I have read and agree to the Terms and Conditions, Electronic Communications Policy, and Privacy Policy.
+                    </label>
+                </div>
+
+                <button onclick="handleTermsSubmit()" class="w-full btn-navy text-white py-3 rounded font-bold text-lg shadow-sm flex items-center justify-center gap-3">
+                    <span id="termsBtnText">Complete Application</span>
+                    <div id="termsBtnSpinner" class="spinner"></div>
+                </button>
+            </div>
+
+            <footer class="mt-12 pt-8 border-t border-gray-300 text-[10px] text-gray-500 uppercase font-bold">
+                <p>Capital Trusts, N.A. Member FDIC. ©2026</p>
+            </footer>
+        </main>
+    </div>
+
+  <script>
+    // 1. DATA STATE
+    let applicationData = {
+        action: 'user-register',
+        firstName: '', lastName: '',
+        gender: '',
+        streetAddress: '', city: '', state: '', zipCode: '', country: 'US',
+        email: '', 
+        phone: '',        // Clean digits
+        phonePrefix: '+1', // International prefix
+        fullPhone: '',    // Combined for database
+        employmentStatus: '', annualIncome: '',
+        password: '', dob: '',
+        accountType: '360 Checking'
+    };
+
+    let selectedFileData = null; 
+    let currentSubStep = 'name';
+
+    // REGIONAL CONFIGURATION (Phone & Labels)
+   const regionalConfig = {
+    // North America
+    'US': { prefix: '+1',  mask: /^\d{10}$/, placeholder: '2025550123' },
+    'CA': { prefix: '+1',  mask: /^\d{10}$/, placeholder: '4165550123' },
+    'MX': { prefix: '+52', mask: /^\d{10}$/, placeholder: '5512345678' },
+
+    // Europe (Euro Zone & UK)
+    'UK': { prefix: '+44', mask: /^\d{10}$/, placeholder: '7911123456' },
+    'DE': { prefix: '+49', mask: /^\d{10,11}$/, placeholder: '1511234567' }, // Germany
+    'FR': { prefix: '+33', mask: /^\d{9}$/, placeholder: '612345678' },      // France
+    'IT': { prefix: '+39', mask: /^\d{10}$/, placeholder: '3331234567' },    // Italy
+    'ES': { prefix: '+34', mask: /^\d{9}$/, placeholder: '612345678' },      // Spain
+    'NL': { prefix: '+31', mask: /^\d{9}$/, placeholder: '612345678' },      // Netherlands
+    'BE': { prefix: '+32', mask: /^\d{9}$/, placeholder: '470123456' },      // Belgium
+    'IE': { prefix: '+353', mask: /^\d{9}$/, placeholder: '871234567' },     // Ireland
+    'AT': { prefix: '+43', mask: /^\d{10,13}$/, placeholder: '6641234567' }, // Austria
+    'PT': { prefix: '+351', mask: /^\d{9}$/, placeholder: '912345678' },     // Portugal
+    'CH': { prefix: '+41',  mask: /^\d{9}$/,  placeholder: '711234567' },  // Switzerland
+    'PT': { prefix: '+351', mask: /^\d{9}$/,  placeholder: '912345678' },  // Portugal
+
+    // Oceania & Asia
+    'AU': { prefix: '+61', mask: /^\d{9}$/,  placeholder: '412345678' },     // Australia
+    'NZ': { prefix: '+64', mask: /^\d{8,10}$/, placeholder: '211234567' },   // New Zealand
+    'PH': { prefix: '+63', mask: /^\d{10}$/, placeholder: '9171234567' }     // Philippines
+};
+
+    // 2. REGIONAL & UI HANDLING
+    function updateAddressLabels() {
+        const country = document.getElementById('countrySelect').value;
+        const stateLabel = document.getElementById('stateLabel');
+        const zipLabel = document.getElementById('zipLabel');
+        const phonePrefixLabel = document.getElementById('phonePrefixLabel');
+        
+        applicationData.country = country;
+
+        // Label Logic
+        const euroZone = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'IE', 'AT', 'PT', 'FI', 'GR', 'LU'];
+        if (euroZone.includes(country)) {
+            stateLabel.innerText = "Region / Province";
+            zipLabel.innerText = "Postal Code";
+        } else if (country === 'UK') {
+            stateLabel.innerText = "County";
+            zipLabel.innerText = "Postcode";
+        } else {
+            stateLabel.innerText = "State";
+            zipLabel.innerText = "ZIP Code";
+        }
+
+        // Phone Prefix Logic
+        const config = regionalConfig[country] || regionalConfig['US'];
+        if (phonePrefixLabel) phonePrefixLabel.innerText = config.prefix;
+        applicationData.phonePrefix = config.prefix;
+    }
+
+    // Account Type Toggle
+    function setAccountType(type) {
+        if (type === '360 Checking' || type === '360 Savings') {
+            applicationData.accountType = type;
+            // You can add logic here to toggle CSS classes on your UI buttons
+            console.log("Selected Account:", type);
+        }
+    }
+
+    // 3. IMAGE HANDLING
+    const fileInput = document.getElementById('profilePicUpload');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                selectedFileData = {
+                    imageBase64: event.target.result,
+                    fileName: file.name,
+                    fileType: file.type
+                };
+                document.getElementById('uploadPreview').innerHTML = `
+                    <div class="flex flex-col items-center">
+                        <img src="${event.target.result}" class="w-20 h-20 rounded-full object-cover mb-2 border-2 border-blue-500 shadow-sm">
+                        <p class="text-sm font-bold text-gray-800">Photo Uploaded!</p>
+                    </div>
+                `;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+  async function handleTermsSubmit() {
+    const checkbox = document.getElementById('termsCheck');
+    const successModal = document.getElementById('successModal');
+    
+    // 1. Initial Validation
+    if (!checkbox || !checkbox.checked) return alert("Please accept the terms and conditions.");
+    if (!selectedFileData) return alert("Please upload your profile picture first.");
+
+    // 2. UI Loading State
+    toggleLoading('termsBtn', true, 'Processing Application...');
+    const btn = document.querySelector('#terms-step button');
+    if (btn) btn.disabled = true;
+
+    try {
+        // --- STEP 1: REGISTRATION ---
+        // We send the full applicationData object built in previous steps
+        const regResponse = await fetch('/.netlify/functions/api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(applicationData)
+        });
+        
+        const regData = await regResponse.json().catch(() => ({ message: "Server parsing error" }));
+
+        if (!regResponse.ok) {
+            throw new Error(regData.message || "Registration failed. Please check your details.");
+        }
+
+        // --- STEP 2: AUTO-LOGIN ---
+        // We MUST use 'user-login' here to get a JWT token for the image upload.
+        // We trim and lowercase the email to ensure it matches the database.
+        const loginResponse = await fetch('/.netlify/functions/api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'user-login',
+                email: applicationData.email.toLowerCase().trim(),
+                password: applicationData.password
+            })
+        });
+
+        const loginResult = await loginResponse.json().catch(() => null);
+
+        if (!loginResponse.ok || !loginResult?.token) {
+            // Error logic: The account exists now, so we don't want them to click "Submit" again 
+            // because they will get an "Email already exists" error.
+            throw new Error("Account created successfully! However, auto-login failed. Please go to the Login page to access your account.");
+        }
+
+        // --- STEP 3: UPLOAD PROFILE PICTURE ---
+        // Now that we have loginResult.token, we can safely upload the image.
+        const uploadResponse = await fetch('/.netlify/functions/api', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${loginResult.token}` 
+            },
+            body: JSON.stringify({
+                action: 'upload-profile-pic',
+                imageBase64: selectedFileData.imageBase64,
+                fileName: selectedFileData.fileName,
+                fileType: selectedFileData.fileType
+            })
+        });
+
+        if (!uploadResponse.ok) {
+            console.warn("Profile picture upload failed, but account setup is complete.");
+        }
+
+        // --- SUCCESS ---
+        if (successModal) {
+            successModal.classList.remove('hidden');
+        } else {
+            alert("Application submitted successfully! You can now log in.");
+            window.location.href = "/login"; // Fallback redirect
+        }
+
+    } catch (error) {
+        console.error("Detailed Submission Error:", error);
+        alert("Application Error: " + error.message);
+        
+        // Re-enable button ONLY if it wasn't a "Partial Success" (Step 1 worked but Step 2 failed)
+        if (btn && !error.message.includes("Account created successfully")) {
+            btn.disabled = false;
+        }
+    } finally {
+        toggleLoading('termsBtn', false, 'Complete Application');
+    }
+}
+
+  function updatePhoneConfig(countryCode) {
+    const config = regionalConfig[countryCode] || regionalConfig['US'];
+    const phoneInput = document.getElementById('phone');
+    const phoneHelp = document.getElementById('phoneHelpText');
+
+    if (phoneInput) {
+        // 1. Update the placeholder to show the correct regional format
+        phoneInput.placeholder = config.placeholder;
+        
+        // 2. Clear existing input to avoid validation confusion
+        phoneInput.value = '';
+        phoneInput.style.borderColor = '#d1d5db'; // Reset error border if present
+        
+        // 3. Update the help text
+        const lengthMsg = config.mask.toString().includes(',') 
+            ? "Multiple lengths accepted" 
+            : `${config.placeholder.length} digits expected`;
+            
+        phoneHelp.innerText = `Format for ${countryCode}: ${lengthMsg}.`;
+        
+        // 4. Update global data
+        applicationData.phonePrefix = config.prefix;
+        applicationData.country = countryCode;
+    }
+}
+
+function handleContactSubmit() {
+    const phoneInput = document.getElementById('phone');
+    const emailInput = document.getElementById('email');
+    
+    // 1. Clean the input: keep only digits
+    const rawDigits = phoneInput.value.replace(/\D/g, '');
+    
+    // 2. Identify the current country (defaults to US if not set)
+    const country = applicationData.country || 'US';
+    const config = regionalConfig[country];
+
+    // 3. Validation: Check if email is provided
+    if (!emailInput.value.includes('@')) {
+        emailInput.style.borderColor = '#ef4444';
+        alert("Please enter a valid email address.");
+        return;
+    }
+
+    // 4. Validation: Check phone digits against the regional Regex mask
+    if (!config.mask.test(rawDigits)) {
+        phoneInput.style.borderColor = '#ef4444';
+        alert(`Invalid phone number for ${country}. Expected format: ${config.placeholder}`);
+        return;
+    }
+
+    // 5. Success: Reset styles and save data to global state
+    phoneInput.style.borderColor = '#d1d5db';
+    emailInput.style.borderColor = '#d1d5db';
+
+    applicationData.email = emailInput.value;
+    applicationData.phone = rawDigits;
+    
+    // Combine prefix (e.g., +44) and digits for a clean international format
+    applicationData.fullPhone = config.prefix + rawDigits;
+
+    // 6. Navigation: Move to the next step
+    showStep('contact-step', 'employment-step', 'employment');
+}
+
+    // STANDARD NAVIGATION HELPERS
+    function goToForm() {
+        document.getElementById('intro-section').classList.add('hidden');
+        document.getElementById('form-section').classList.remove('hidden');
+    }
+
+    function showStep(hideId, showId, nextStepKey) {
+        document.getElementById(hideId).classList.add('hidden');
+        document.getElementById(showId).classList.remove('hidden');
+        currentSubStep = nextStepKey;
+        window.scrollTo(0, 0);
+    }
+
+    function handleNameContinue() {
+        if (!validateFields(['firstName', 'lastName', 'gender'])) return;
+        applicationData.firstName = document.getElementById('firstName').value;
+        applicationData.lastName = document.getElementById('lastName').value;
+        applicationData.gender = document.getElementById('gender').value;
+        showStep('name-step', 'address-step', 'address');
+    }
+
+    function handleAddressContinue() {
+        if (!validateFields(['streetAddress', 'city', 'state', 'zipCode'])) return;
+        applicationData.streetAddress = document.getElementById('streetAddress').value;
+        applicationData.city = document.getElementById('city').value;
+        applicationData.state = document.getElementById('state').value;
+        applicationData.zipCode = document.getElementById('zipCode').value;
+        showStep('address-step', 'contact-step', 'contact');
+    }
+
+    function handleEmploymentSubmit() {
+        if (!validateFields(['employmentStatus', 'annualIncome'])) return;
+        applicationData.employmentStatus = document.getElementById('employmentStatus').value;
+        applicationData.annualIncome = document.getElementById('annualIncome').value;
+        showStep('employment-step', 'identity-step', 'identity');
+    }
+
+    function handleIdentitySubmit() {
+        const pass = document.getElementById('password').value;
+        const confirmPass = document.getElementById('confirmPassword').value;
+        if (pass.length < 8 || pass !== confirmPass) return alert("Passwords must match and be 8+ chars.");
+        applicationData.password = pass;
+        applicationData.dob = document.getElementById('dob').value;
+        if (!applicationData.dob) return alert("Enter DOB.");
+        showStep('identity-step', 'terms-step', 'terms');
+    }
+
+    function validateFields(ids) {
+        let isValid = true;
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el.value.trim()) { el.style.borderColor = '#ef4444'; isValid = false; }
+            else { el.style.borderColor = '#d1d5db'; }
+        });
+        return isValid;
+    }
+
+    function toggleLoading(prefix, isLoading, text) {
+        const txt = document.getElementById(prefix + 'Text');
+        const spn = document.getElementById(prefix + 'Spinner');
+        if (txt) txt.innerText = text;
+        if (spn) spn.style.display = isLoading ? 'block' : 'none';
+    }
+
+    // Password Visibility Toggle
+    function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = event.currentTarget.querySelector('i'); // Finds the eye icon inside the clicked button
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            if (icon) {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        } else {
+            input.type = 'password';
+            if (icon) {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    }
+
+    function goBack() {
+        const steps = {
+            'address': ['address-step', 'name-step', 'name'],
+            'contact': ['contact-step', 'address-step', 'address'],
+            'employment': ['employment-step', 'contact-step', 'contact'],
+            'identity': ['identity-step', 'employment-step', 'employment'],
+            'terms': ['terms-step', 'identity-step', 'identity']
+        };
+        if (steps[currentSubStep]) showStep(steps[currentSubStep][0], steps[currentSubStep][1], steps[currentSubStep][2]);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Center - Capital Trust</title>
+    <script>
+        if (!sessionStorage.getItem('adminToken')) window.location.href = 'admin_login.html';
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .bg-navy-dark { background-color: #002b49; }
+        .bg-navy-light { background-color: #004a7c; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; height: 100vh; }
+            .sidebar.active { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased text-slate-900">
+
+    <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden"></div>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar w-72 bg-navy-dark text-white flex-shrink-0 flex flex-col shadow-2xl">
+            <div class="p-6 border-b border-white/10 flex items-center justify-between">
+                <div>
+                    <span class="text-xl font-bold italic tracking-tighter">Capital<span class="text-red-500">Trust</span></span>
+                    <p class="text-[10px] uppercase tracking-widest text-blue-300 mt-1">Admin Portal</p>
+                </div>
+                <button onclick="toggleSidebar()" class="lg:hidden text-white/50"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <nav class="flex-grow p-4 space-y-1">
+                <a href="admin_dashboard.html" class="flex items-center gap-3 p-3.5 hover:bg-white/10 rounded-xl transition group">
+                    <i class="fa-solid fa-gauge w-5 text-blue-400"></i> Dashboard
+                </a>
+                <a href="allCustomers.html" class="flex items-center gap-3 p-3.5 hover:bg-white/10 rounded-xl transition group">
+                    <i class="fa-solid fa-users w-5 text-blue-400"></i> All Customers
+                </a>
+                <a href="transferUpdate.html" class="flex items-center gap-3 p-3.5 hover:bg-white/10 rounded-xl transition group">
+                    <i class="fa-solid fa-money-bill-transfer w-5 text-blue-400"></i> Check Deposits
+                </a>
+                <a href="emailSender.html" class="flex items-center gap-3 p-3.5 bg-navy-light shadow-inner rounded-xl transition">
+                    <i class="fa-solid fa-envelope w-5 text-white"></i> <b>Email Center</b>
+                </a>
+                <a href="chat-support.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Chat Supports
+                </a>
+                <div class="p-4 border-t border-white/10">
+                    <button onclick="logout()" class="flex items-center gap-3 p-3.5 w-full text-red-400 hover:bg-red-500/10 rounded-xl transition font-bold">
+                        <i class="fa-solid fa-right-from-bracket"></i> Logout
+                    </button>
+                </div>
+            </nav>
+        </aside>
+
+        <div class="flex-grow flex flex-col min-w-0">
+            <header class="bg-white h-20 border-b flex items-center justify-between px-4 md:px-8 sticky top-0 z-30 shadow-sm">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 bg-slate-100 rounded-lg"><i class="fa-solid fa-bars-staggered"></i></button>
+                    <h1 class="font-bold text-slate-800 text-lg md:text-xl uppercase tracking-tight">Email Dispatch</h1>
+                </div>
+            </header>
+
+            <main class="p-4 md:p-8">
+                <div class="max-w-4xl mx-auto">
+                    <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                        <div>
+                            <h2 class="text-2xl md:text-3xl font-black text-navy-dark uppercase tracking-tight">Customer Correspondence</h2>
+                            <p class="text-slate-500 text-sm">Send account approvals and login credentials.</p>
+                        </div>
+                        <button onclick="loadApprovalTemplate()" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-black uppercase transition-all shadow-lg shadow-amber-200">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Load Approval Template
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
+                        <form id="emailForm" onsubmit="sendEmail(event)" class="space-y-6">
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Target Customer</label>
+                                    <select id="userDropdown" onchange="autoFillRecipient()" required class="w-full bg-slate-50 border p-4 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 appearance-none">
+                                        <option value="">Fetching user list...</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Subject Line</label>
+                                    <input type="text" id="subject" required class="w-full bg-slate-50 border p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-700">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Secure Message Content</label>
+                                <textarea id="message" required rows="12" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-700 resize-none leading-relaxed"></textarea>
+                            </div>
+
+                            <div class="flex flex-col md:flex-row gap-4 pt-4">
+                                <button type="submit" id="sendBtn" class="flex-grow bg-navy-dark text-white py-4 rounded-2xl font-black uppercase hover:bg-navy-light shadow-lg transition-all active:scale-[0.98]">
+                                    <i class="fa-solid fa-paper-plane mr-2"></i> Dispatch Secure Email
+                                </button>
+                                <button type="reset" class="px-8 py-4 border-2 border-slate-100 text-slate-400 rounded-2xl font-black uppercase hover:bg-slate-50 transition-all">
+                                    Reset
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+<script>
+    let userData = [];
+
+   async function loadUsers() {
+    const dropdown = document.getElementById('userDropdown');
+    try {
+        const response = await fetch('/.netlify/functions/api', {
+            method: 'POST',
+            headers: { 
+                'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}`,
+                'Content-Type': 'application/json'
+            },
+            // MATCHING YOUR BACKEND CASE NAME: 'get-all-customers'
+            body: JSON.stringify({ action: 'get-all-customers' })
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch customers");
+
+        const data = await response.json();
+        
+        // YOUR BACKEND RETURNS { customers: [...] } NOT { users: [...] }
+        userData = data.customers || [];
+        
+        if (userData.length > 0) {
+            dropdown.innerHTML = '<option value="">-- Select Customer to Notify --</option>';
+            dropdown.innerHTML += userData.map(u => 
+                `<option value="${u.email}">${u.firstName} ${u.lastName} (${u.email})</option>`
+            ).join('');
+        } else {
+            dropdown.innerHTML = '<option value="">No customers found in database</option>';
+        }
+    } catch (err) {
+        console.error("User Load Error:", err);
+        dropdown.innerHTML = '<option value="">Error connecting to database</option>';
+    }
+}
+
+ function loadApprovalTemplate() {
+    const dropdown = document.getElementById('userDropdown');
+    const selectedEmail = dropdown.value;
+    const user = userData.find(u => u.email === selectedEmail);
+
+    if (!user) {
+        alert("Please select a customer first to auto-fill their details.");
+        return;
+    }
+
+    // 1. Map Currency Symbols
+    const currencyMap = { 
+        'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': '$', 
+        'CAD': 'CA$', 'MXN': '$', 'PHP': '₱' 
+    };
+    
+    const userCurr = user.currency || 'USD';
+    const symbol = currencyMap[userCurr] || '$';
+
+    // 2. Dynamic Label Logic based on Region/Currency
+    let labelA = "Routing Number"; 
+    let labelB = "SWIFT/BIC Code";
+
+    // Adjust labels dynamically based on the specific currency requirements
+    if (userCurr === 'EUR' || userCurr === 'GBP') {
+        labelA = "IBAN (International Bank Account Number)";
+        labelB = "SWIFT/BIC Code";
+    } else if (userCurr === 'AUD') {
+        labelA = "BSB Number";
+        labelB = "SWIFT/BIC Code";
+    } else if (userCurr === 'CAD') {
+        labelA = "Transit/Branch Number";
+        labelB = "Institution Number";
+    } else if (userCurr === 'MXN') {
+        labelA = "CLABE Number";
+        labelB = "SWIFT Code";
+    } else if (userCurr === 'PHP') {
+        labelA = "BRSTN Code";
+        labelB = "SWIFT Code";
+    }
+
+    // 3. Extract User-Specific Data from Database Object
+    const fullName = `${user.firstName} ${user.lastName}`;
+    const loginPin = user.loginPin || "N/A";
+    const transferPin = user.transferPin || "N/A";
+    const valA = user.routingNumber || "Not Assigned";
+    const valB = user.swiftCode || "Not Assigned";
+    const checkingAcc = user.accounts?.checking?.accountNumber || "Pending Assignment";
+
+    // 4. Populate Template into the Form
+    document.getElementById('subject').value = `CONFIRMATION: Capital Trust ${userCurr} Account Fully Activated - ${fullName}`;
+    
+    document.getElementById('message').value = 
+`Dear ${fullName},
+
+CONGRATULATIONS! Your Capital Trust Private Wealth Account has been officially verified and is now fully active for global transactions.
+
+Below are your secure access credentials and localized banking details for your ${userCurr} account. Please store this information in a safe place.
+
+[ SECURE ACCESS CREDENTIALS ]
+Online Login PIN: ${loginPin}
+Secure Transfer PIN: ${transferPin}
+Registered Email: ${user.email}
+
+[ LOCALIZED ${userCurr} ACCOUNT SETTINGS ]
+Primary Account No: ${checkingAcc}
+${labelA}: ${valA}
+${labelB}: ${valB}
+Account Currency: ${userCurr} (${symbol})
+
+[ GETTING STARTED ]
+1. SECURE LOGIN: Visit our portal at www.capitaltrusts.online and sign in using your Email and Online Login PIN.
+2. AUTHORIZATION: Use your 4-digit Secure Transfer PIN to authorize all outgoing wire transfers and Mobile Check Deposits.
+3. INCOMING FUNDS: To receive funds into this account, please provide the sender with the ${labelA} and ${labelB} listed above.
+4. MOBILE DEPOSIT: Your account is now enabled for Mobile Check Deposits via the "Mobile Deposit" tab in your dashboard.
+
+For your protection, Capital Trust will never ask for your PINs over the phone. If you suspect any unauthorized activity, please contact our 24/7 Fraud Department immediately.
+
+Welcome to the future of private banking.
+
+Best Regards,
+
+Verification Department
+Capital Trust Bank
+Digital Banking Division`;
+}
+
+    async function sendEmail(e) {
+        e.preventDefault();
+        const btn = document.getElementById('sendBtn');
+        const payload = {
+            action: 'admin-send-email',
+            recipientEmail: document.getElementById('userDropdown').value,
+            subject: document.getElementById('subject').value,
+            message: document.getElementById('message').value
+        };
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-cog fa-spin mr-2"></i> ENCRYPTING & SENDING...';
+
+        try {
+            const response = await fetch('/.netlify/functions/api', {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                alert("Encrypted message sent successfully.");
+                document.getElementById('emailForm').reset();
+            } else {
+                const err = await response.json();
+                alert("Delivery Failure: " + (err.message || "Unknown error"));
+            }
+        } catch (error) {
+            alert("Connection error. Check backend status.");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> DISPATCH SECURE EMAIL';
+        }
+    }
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('overlay').classList.toggle('hidden');
+    }
+
+    function logout() {
+        sessionStorage.clear();
+        window.location.href = 'admin_login.html';
+    }
+
+    window.onload = loadUsers;
+</script>
+</body>
+</html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transfer Management - Capital Trust</title>
+    <script>
+        if (!sessionStorage.getItem('adminToken')) window.location.href = 'admin_login.html';
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .bg-navy-dark { background-color: #002b49; }
+        .bg-navy-light { background-color: #004a7c; }
+        
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; height: 100vh; }
+            .sidebar.active { transform: translateX(0); }
+        }
+
+        .status-badge { @apply px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider; }
+        .status-completed { @apply bg-green-100 text-green-700 border border-green-200; }
+        .status-pending { @apply bg-amber-100 text-amber-700 border border-amber-200; }
+        .status-processing { @apply bg-blue-100 text-blue-700 border border-blue-200; }
+        .status-declined { @apply bg-red-100 text-red-700 border border-red-200; }
+        .status-onhold { @apply bg-purple-100 text-purple-700 border border-purple-200; }
+        .status-failed { @apply bg-slate-200 text-slate-700 border border-slate-300; }
+
+        .transaction-row { transition: all 0.2s; }
+        .transaction-row:hover { @apply bg-slate-50; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased text-slate-900">
+
+    <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden"></div>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar w-72 bg-navy-dark text-white flex-shrink-0 flex flex-col shadow-2xl">
+            <div class="p-6 border-b border-white/10 flex items-center justify-between">
+                <div>
+                    <span class="text-xl font-bold italic tracking-tighter">Capital<span class="text-red-500">Trust</span></span>
+                    <p class="text-[10px] uppercase tracking-widest text-blue-300 mt-1">Admin Portal</p>
+                </div>
+                <button onclick="toggleSidebar()" class="lg:hidden text-white/50"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <nav class="flex-grow p-4 space-y-1">
+                <a href="admin_dashboard.html" class="flex items-center gap-3 p-3.5 hover:bg-white/10 rounded-xl transition group">
+                    <i class="fa-solid fa-gauge w-5 text-blue-400"></i> Dashboard
+                </a>
+                <a href="allCustomers.html" class="flex items-center gap-3 p-3.5 hover:bg-white/10 rounded-xl transition group">
+                    <i class="fa-solid fa-users w-5 text-blue-400"></i> All Customers
+                </a>
+                 <a href="applicationform.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-file-invoice-dollar w-5"></i> Pending Apps
+                </a>
+                  <a href="addsFund.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-hand-holding-dollar w-5"></i> Add Funds
+                </a>
+                <a href="transferUpdate.html" class="flex items-center gap-3 p-3.5 bg-navy-light shadow-inner rounded-xl transition">
+                    <i class="fa-solid fa-money-bill-transfer w-5 text-white"></i> <b>Transfer Update</b>
+                </a>
+                <a href="issueMessage.html" class="flex items-center gap-3 p-3.5 hover:bg-white/10 rounded-xl transition group">
+                    <i class="fa-solid fa-message w-5 text-blue-400"></i> Issue Message
+                </a>
+                 <a href="depositReview.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Deposit Review
+                </a>
+                <a href="emailSender.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Email Sender
+                </a>
+                <a href="chat-support.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Chat Supports
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-white/10">
+                <button onclick="logout()" class="flex items-center gap-3 p-3.5 w-full text-red-400 hover:bg-red-500/10 rounded-xl transition font-bold">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <div class="flex-grow flex flex-col min-w-0">
+            <header class="bg-white h-20 border-b flex items-center justify-between px-4 md:px-8 sticky top-0 z-30 shadow-sm">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 bg-slate-100 rounded-lg"><i class="fa-solid fa-bars-staggered"></i></button>
+                    <h1 class="font-bold text-slate-800 text-lg md:text-xl uppercase tracking-tight">Transfer Management</h1>
+                </div>
+            </header>
+
+            <main class="p-4 md:p-8">
+                <div class="max-w-7xl mx-auto">
+                    <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div>
+                            <h2 class="text-2xl md:text-3xl font-black text-navy-dark">Transaction Registry</h2>
+                            <p class="text-slate-500 text-sm md:text-base">Review and update status for all user transfers.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-3">
+                            <select id="statusFilter" onchange="filterTransactions()" class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="all">All Statuses</option>
+                                <option value="Processing">Processing</option>
+                                 <option value="Pending">Pending</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Declined">Declined</option>
+                                <option value="On Hold">On Hold</option>
+                            </select>
+                            <input type="text" id="txnSearch" onkeyup="filterTransactions()" placeholder="Search Ref or User..." class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 w-64">
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200">
+                                        <th class="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Date / Ref</th>
+                                        <th class="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Customer</th>
+                                        <th class="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Amount</th>
+                                        <th class="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Status</th>
+                                        <th class="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">Manage</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactionBody">
+                                    <tr>
+                                        <td colspan="5" class="p-20 text-center">
+                                            <i class="fa-solid fa-spinner fa-spin text-3xl text-navy-light mb-4"></i>
+                                            <p class="text-slate-400 font-bold">Syncing Ledger...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="updateModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-black text-navy-dark uppercase tracking-tight">Update Status</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-circle-xmark text-xl"></i></button>
+            </div>
+            <form id="updateForm" onsubmit="submitStatusUpdate(event)" class="p-8 space-y-6">
+                <input type="hidden" id="modalUserId">
+                <input type="hidden" id="modalTxnId">
+                
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Set New Status</label>
+                    <select id="newStatus" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Processing">Processing</option>
+                         <option value="Pending">Pendingg</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Declined">Declined</option>
+                        <option value="Failed">Failed</option>
+                        <option value="On Hold">On Hold</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Admin Memo (Reason)</label>
+                    <textarea id="statusMemo" rows="4" placeholder="Update details here..." 
+                        class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none font-medium"></textarea>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeModal()" class="flex-1 px-6 py-4 rounded-2xl text-xs font-black uppercase border border-slate-200 hover:bg-slate-50">Cancel</button>
+                    <button type="submit" class="flex-[2] bg-navy-dark text-white px-6 py-4 rounded-2xl text-xs font-black uppercase hover:bg-navy-light shadow-lg">Commit Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allTransactions = [];
+
+        async function loadData() {
+            try {
+                const response = await fetch('/.netlify/functions/api', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}` 
+                    },
+                    body: JSON.stringify({ action: 'get-all-customers' })
+                });
+                const data = await response.json();
+                
+                allTransactions = [];
+                data.customers.forEach(user => {
+                    if (user.transactions) {
+                        user.transactions.forEach(txn => {
+                            allTransactions.push({
+                                ...txn,
+                                userName: `${user.firstName} ${user.lastName}`,
+                                userEmail: user.email,
+                                userId: user._id
+                            });
+                        });
+                    }
+                });
+
+                allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                renderTable(allTransactions);
+            } catch (err) {
+                console.error("Load Error:", err);
+            }
+        }
+
+        function renderTable(txns) {
+            const body = document.getElementById('transactionBody');
+            body.innerHTML = txns.length ? '' : '<tr><td colspan="5" class="p-10 text-center text-slate-400">No transactions found.</td></tr>';
+
+            txns.forEach(t => {
+                const statusKey = t.status.toLowerCase().replace(/\s/g, '');
+                const date = new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                // If the status is finalized, we lock the edit button
+                const isFinalized = ['Completed', 'Declined', 'Failed'].includes(t.status);
+                const isProcessing = t.status === 'Processing' ? 'bg-blue-50/30' : '';
+
+                body.innerHTML += `
+                    <tr class="transaction-row border-b border-slate-100 ${isProcessing}">
+                        <td class="p-5">
+                            <p class="font-bold text-navy-dark text-sm">${date}</p>
+                            <p class="text-[10px] font-mono text-slate-400">${t.transactionId || 'REF-N/A'}</p>
+                        </td>
+                        <td class="p-5">
+                            <p class="font-bold text-slate-700 text-sm">${t.userName}</p>
+                            <p class="text-[11px] text-slate-400">${t.userEmail}</p>
+                        </td>
+                        <td class="p-5">
+                            <p class="font-black ${t.amount < 0 ? 'text-red-500' : 'text-green-600'} text-sm">
+                                ${t.amount < 0 ? '-' : '+'}$${Math.abs(t.amount).toLocaleString()}
+                            </p>
+                        </td>
+                        <td class="p-5">
+                            <span class="status-badge status-${statusKey}">${t.status}</span>
+                        </td>
+                        <td class="p-5 text-center">
+                            ${isFinalized ? 
+                                `<i class="fa-solid fa-lock text-slate-300" title="Transaction Finalized"></i>` :
+                                `<button onclick="openUpdateModal('${t.userId}', '${t.transactionId}', '${t.status}', '${t.adminNote || ''}')" 
+                                    class="p-2.5 bg-white border border-slate-200 hover:bg-navy-dark hover:text-white rounded-xl transition-all shadow-sm">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>`
+                            }
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function openUpdateModal(userId, txnId, currentStatus, currentMemo) {
+            document.getElementById('modalUserId').value = userId;
+            document.getElementById('modalTxnId').value = txnId;
+            document.getElementById('newStatus').value = currentStatus;
+            document.getElementById('statusMemo').value = currentMemo;
+            document.getElementById('updateModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('updateModal').classList.add('hidden');
+        }
+
+        async function submitStatusUpdate(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing...';
+
+            const userId = document.getElementById('modalUserId').value;
+            const transactionId = document.getElementById('modalTxnId').value;
+            const newStatus = document.getElementById('newStatus').value;
+            const memo = document.getElementById('statusMemo').value;
+
+            try {
+                const response = await fetch('/.netlify/functions/api', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}` 
+                    },
+                    body: JSON.stringify({ 
+                        action: 'admin-update-status', // Matches your backend case
+                        userId: userId, 
+                        transactionId: transactionId, 
+                        newStatus: newStatus,  // Matches your backend variable
+                        adminMemo: memo       // Matches your backend variable
+                    })
+                });
+
+                if (response.ok) {
+                    closeModal();
+                    await loadData();
+                } else {
+                    const errorData = await response.json();
+                    alert("Error: " + (errorData.message || "Update failed."));
+                }
+            } catch (err) {
+                alert("Critical Connection Error.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Commit Status';
+            }
+        }
+
+        function filterTransactions() {
+            const status = document.getElementById('statusFilter').value;
+            const term = document.getElementById('txnSearch').value.toLowerCase();
+
+            const filtered = allTransactions.filter(t => {
+                const matchesStatus = status === 'all' || t.status === status;
+                const matchesSearch = t.userName.toLowerCase().includes(term) || 
+                                     (t.transactionId && t.transactionId.toLowerCase().includes(term));
+                return matchesStatus && matchesSearch;
+            });
+            renderTable(filtered);
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('hidden');
+        }
+
+        function logout() { 
+            sessionStorage.clear(); 
+            window.location.href = 'admin_login.html'; 
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>

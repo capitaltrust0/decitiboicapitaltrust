@@ -1,0 +1,32 @@
+# 1. BUILD SETTINGS
+[build]
+  # This is the folder containing your HTML, CSS, and JS files
+  publish = "/"
+  
+  # This is the folder where your Netlify functions (backend) are stored
+  functions = "netlify/functions"
+
+# 2. REDIRECTS (Prevents 404 on page refresh for SPAs)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# 3. GLOBAL HEADERS (Security & CORS)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Allows your frontend to talk to the backend without CORS blocks
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+
+# 4. FUNCTIONS SETTINGS
+[functions]
+  # This ensures your functions stay warm and use the latest Node environment
+  node_bundler = "esbuild"
+  external_node_modules = ["mongodb", "bcryptjs", "jsonwebtoken", "aws-sdk"]

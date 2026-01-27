@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support - Capital Trusts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar { transition: all 0.3s ease; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; }
+            .sidebar.active { transform: translateX(0); }
+        }
+        .bg-navy-sidebar { background-color: #004a7c; }
+        .bg-navy-dark { background-color: #002b49; }
+        
+        /* Chat bubble styles */
+        .chat-bubble-admin { border-radius: 2px 15px 15px 15px; background: #f1f5f9; color: #1e293b; }
+        .chat-bubble-user { border-radius: 15px 15px 2px 15px; background: #004a7c; color: white; }
+        
+        #chat-window::-webkit-scrollbar { width: 4px; }
+        #chat-window::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-[#f4f7f9] font-sans antialiased text-slate-800 text-[13px] md:text-sm">
+
+    <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar w-60 bg-navy-sidebar text-white flex flex-col flex-shrink-0 min-h-screen">
+            <div class="p-5">
+                <span class="text-lg font-bold italic tracking-tighter">Capital<span class="text-red-500">Trusts</span></span>
+            </div>
+            <nav class="flex-grow px-3 space-y-1">
+                <a href="user_dashboard.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs">
+                    <i class="fa-solid fa-house w-4 text-blue-300"></i> Dashboard
+                </a>
+                <a href="cards.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs">
+                    <i class="fa-solid fa-house w-4 text-blue-300"></i> Credit Card
+                </a>
+                <a href="transfer.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs">
+                    <i class="fa-solid fa-house w-4 text-blue-300"></i> Transfer
+                </a>
+                <a href="user_profile.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs">
+                    <i class="fa-solid fa-house w-4 text-blue-300"></i> Profile
+                </a>
+                <a href="Support.html" class="bg-navy-dark rounded-md p-2.5 flex items-center gap-3 cursor-pointer">
+                    <i class="fa-solid fa-headset text-xs text-blue-300"></i>
+                    <span class="text-xs font-semibold text-blue-100">Support Chat</span>
+                </a>
+                <button onclick="logout()" class="w-full flex items-center gap-3 p-2.5 hover:bg-red-500/20 rounded-md transition text-xs mt-10 text-red-300">
+                    <i class="fa-solid fa-right-from-bracket w-4"></i> Sign Out
+                </button>
+            </nav>
+        </aside>
+
+        <main class="flex-grow flex flex-col h-screen overflow-hidden">
+            <header class="bg-white h-14 flex items-center px-4 md:px-6 border-b justify-between shrink-0">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="lg:hidden text-navy-dark text-lg"><i class="fa-solid fa-bars"></i></button>
+                    <h1 class="font-bold text-navy-dark">Secure Support</h1>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Live Agent Ready</span>
+                </div>
+            </header>
+
+            <div id="chat-window" class="flex-grow overflow-y-auto p-4 md:p-6 space-y-4">
+                <div class="flex justify-start">
+                    <div class="max-w-[80%] p-3 chat-bubble-admin shadow-sm">
+                        <p class="text-[11px] leading-relaxed">Hello! Welcome to Capital Trusts Support. How can we help you with your account today?</p>
+                        <p class="text-[8px] mt-1 text-slate-400 text-right">System • Secure</p>
+                    </div>
+                </div>
+                <div id="dynamic-messages" class="space-y-4"></div>
+            </div>
+
+            <div class="p-4 bg-white border-t shrink-0">
+                <form id="chat-form" onsubmit="sendMessage(event)" class="flex gap-2 max-w-4xl mx-auto">
+                    <input type="text" id="user-input" required 
+                        class="flex-grow bg-slate-100 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none text-xs" 
+                        placeholder="Type your message here...">
+                    <button type="submit" id="send-btn" 
+                        class="bg-navy-sidebar text-white w-12 h-12 rounded-xl flex items-center justify-center hover:bg-navy-dark transition active:scale-95 shadow-lg shadow-blue-900/10">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+                <p class="text-center text-[9px] text-slate-400 mt-2 font-medium italic">
+                    <i class="fa-solid fa-shield-halved mr-1"></i> End-to-end encrypted banking support.
+                </p>
+            </div>
+        </main>
+    </div>
+
+<script>
+   // --- CONFIGURATION ---
+const token = sessionStorage.getItem('userToken');
+if (!token) window.location.href = '/index.html';
+
+// Decode the JWT token to get the logged-in user's email
+// (Assuming your token is a standard JWT. If not, fetch it from your profile data)
+const currentUserEmail = JSON.parse(atob(token.split('.')[1])).email; 
+
+const chatWindow = document.getElementById('chat-window');
+const dynamicMessages = document.getElementById('dynamic-messages');
+const inputField = document.getElementById('user-input');
+let lastMessageCount = 0;
+
+/**
+ * 1. Function to Add Message to UI
+ * @param {string} id - Unique ID for the message element
+ */
+function appendMessage(text, senderEmail, time = 'Just now', id = null) {
+    const isMe = senderEmail === currentUserEmail;
+    const wrapper = document.createElement('div');
+    if (id) wrapper.id = id;
+    wrapper.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+    
+    wrapper.innerHTML = `
+        <div class="max-w-[85%] p-3 ${isMe ? 'chat-bubble-user' : 'chat-bubble-admin'} shadow-sm">
+            <p class="text-[11px] leading-relaxed">${text}</p>
+            <div class="flex items-center justify-end gap-1 mt-1">
+                <p class="text-[8px] ${isMe ? 'text-blue-200' : 'text-slate-400'} status-text">
+                    ${time}
+                </p>
+                ${isMe ? '<i class="fa-solid fa-check text-[7px] text-blue-300"></i>' : ''}
+            </div>
+        </div>
+    `;
+    
+    dynamicMessages.appendChild(wrapper);
+    chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
+}
+
+/**
+ * 2. Fetch/Refresh Conversation
+ */
+async function loadChatHistory(isPolling = false) {
+    try {
+        const response = await fetch('/.netlify/functions/api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ action: 'get-user-profile' }) 
+        });
+        const data = await response.json();
+        
+        const messages = data.supportMessages || [];
+
+        // Only update if new messages exist
+        if (messages.length > lastMessageCount) {
+            if (!isPolling) dynamicMessages.innerHTML = '';
+            
+            const newMessages = isPolling ? messages.slice(lastMessageCount) : messages;
+            
+            newMessages.forEach(msg => {
+                const msgTime = msg.date ? new Date(msg.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now';
+                appendMessage(msg.text, msg.sender, msgTime);
+            });
+
+            lastMessageCount = messages.length;
+        }
+    } catch (err) { 
+        console.error("Support load error:", err); 
+    }
+}
+
+/**
+ * 3. Send New Message (Linked by Email)
+ */
+async function sendMessage(e) {
+    e.preventDefault();
+    const text = inputField.value.trim();
+    if (!text) return;
+
+    // OPTIMISTIC UI: Show message immediately with "Sending..."
+    const tempId = 'msg-' + Date.now();
+    appendMessage(text, currentUserEmail, 'Sending...', tempId);
+    inputField.value = '';
+
+    try {
+        const response = await fetch('/.netlify/functions/api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ 
+                action: 'send-support-message', 
+                message: text 
+            })
+        });
+
+        if (!response.ok) throw new Error();
+        
+        // Update "Sending..." to real time upon success
+        const tempMsg = document.getElementById(tempId);
+        if(tempMsg) {
+            tempMsg.querySelector('.status-text').innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+    } catch (err) {
+        const tempMsg = document.getElementById(tempId);
+        if(tempMsg) {
+            const status = tempMsg.querySelector('.status-text');
+            status.innerText = 'Failed';
+            status.classList.add('text-red-400');
+        }
+    }
+}
+
+// 4. Polling for Admin Replies (Every 5 seconds)
+setInterval(() => loadChatHistory(true), 5000);
+
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('active');
+    document.getElementById('overlay').classList.toggle('hidden');
+}
+
+function logout() { 
+    sessionStorage.clear(); 
+    window.location.href = '/index.html'; 
+}
+
+window.onload = () => loadChatHistory(false);
+</script>
+</body>
+</html>

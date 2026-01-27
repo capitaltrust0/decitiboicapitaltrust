@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Control - Capital Trust</title>
+    <script>
+        if (!sessionStorage.getItem('adminToken')) window.location.href = 'admin_login.html';
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar { transition: all 0.3s ease; }
+        .bg-navy-dark { background-color: #002b49; }
+        .bg-navy-light { background-color: #004a7c; }
+        
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; height: 100vh; }
+            .sidebar.active { transform: translateX(0); }
+        }
+
+        .control-panel { animation: slideUp 0.4s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Custom Select Styling */
+        .custom-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans antialiased text-slate-900">
+
+    <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden"></div>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar w-72 bg-navy-dark text-white flex-shrink-0 flex flex-col shadow-2xl">
+            <div class="p-6 border-b border-white/10">
+                <span class="text-xl font-bold italic tracking-tighter text-white">Capital<span class="text-red-500">Trust</span></span>
+                <p class="text-[10px] uppercase tracking-widest text-blue-300 mt-1 font-bold">Security Module</p>
+            </div>
+            
+            <nav class="flex-grow p-4 space-y-1">
+                <a href="admin_dashboard.html" class="flex items-center gap-3 p-3.5 hover:bg-white/10 rounded-xl transition text-sm">
+                    <i class="fa-solid fa-gauge w-5 text-blue-400"></i> Dashboard
+                </a>
+                <a href="issueMessage.html" class="flex items-center gap-3 p-3.5 bg-navy-light shadow-inner rounded-xl transition text-sm">
+                    <i class="fa-solid fa-user-shield w-5 text-white"></i> <b>Security Control</b>
+                </a>
+                <a href="allCustomers.html" class="flex items-center gap-3 p-3.5 hover:bg-white/10 rounded-xl transition text-sm">
+                    <i class="fa-solid fa-users w-5 text-blue-400"></i> View All Users
+                </a>
+                 </a>
+                  <a href="transferUpdate.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Transfer Update
+                </a>
+                 <a href="depositReview.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Deposit Review
+                </a>
+                <a href="emailSender.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Email Sender
+                </a>
+                <a href="chat-support.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Chat Supports
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-white/10">
+                <button onclick="logout()" class="flex items-center gap-3 p-3.5 w-full text-red-400 hover:bg-red-500/10 rounded-xl transition font-bold text-sm">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <div class="flex-grow flex flex-col min-w-0">
+            <header class="bg-white h-20 border-b flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 shadow-sm">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 bg-slate-100 rounded-lg text-navy-dark"><i class="fa-solid fa-bars-staggered"></i></button>
+                    <h1 class="font-black text-slate-800 text-lg uppercase tracking-tight">Access Management</h1>
+                </div>
+            </header>
+
+            <main class="p-6 lg:p-12">
+                <div class="max-w-4xl mx-auto">
+                    
+                    <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-200 mb-8">
+                        <div class="mb-6">
+                            <h2 class="text-2xl font-black text-navy-dark">Select Customer</h2>
+                            <p class="text-slate-500 text-sm">Search and select a user to modify their transaction permissions.</p>
+                        </div>
+
+                        <div class="relative">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Target Account</label>
+                            <div class="flex flex-col md:flex-row gap-4">
+                                <div class="relative flex-grow">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <select id="userDropdown" onchange="handleUserSelection()" class="custom-select w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-4 text-sm font-bold text-slate-700 outline-none transition-all appearance-none cursor-pointer">
+                                        <option value="">Loading users...</option>
+                                    </select>
+                                    <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                                </div>
+                                <button onclick="fetchUsers()" class="px-6 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl transition flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-rotate"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-200 mb-8">
+
+                    <div id="controlInterface" class="hidden">
+                        <div id="userHeader" class="mb-8 flex items-center gap-5 p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
+                            </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-1 gap-8">
+                            <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden control-panel">
+                                <div class="bg-navy-dark p-6 text-white flex justify-between items-center">
+                                    <h3 class="font-bold flex items-center gap-2">
+                                        <i class="fa-solid fa-sliders"></i> Permission Overrides
+                                    </h3>
+                                    <span id="statusBadge" class="text-[10px] px-3 py-1 rounded-full font-black uppercase"></span>
+                                </div>
+
+                                <div class="p-8">
+                                    <form id="restrictionForm" onsubmit="submitUpdate(event)" class="space-y-8">
+                                        <input type="hidden" id="selectedUserId">
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Transfer Status</label>
+                                                <div class="grid grid-cols-2 gap-3">
+                                                    <label class="cursor-pointer">
+                                                        <input type="radio" name="transferBlocked" value="false" class="peer hidden">
+                                                        <div class="text-center p-4 border-2 border-slate-100 rounded-2xl peer-checked:border-green-500 peer-checked:bg-green-50 transition-all">
+                                                            <i class="fa-solid fa-circle-check text-green-500 mb-1 block"></i>
+                                                            <span class="text-xs font-bold">Enabled</span>
+                                                        </div>
+                                                    </label>
+                                                    <label class="cursor-pointer">
+                                                        <input type="radio" name="transferBlocked" value="true" class="peer hidden">
+                                                        <div class="text-center p-4 border-2 border-slate-100 rounded-2xl peer-checked:border-red-500 peer-checked:bg-red-50 transition-all">
+                                                            <i class="fa-solid fa-circle-xmark text-red-500 mb-1 block"></i>
+                                                            <span class="text-xs font-bold">Blocked</span>
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Dashboard Alert Message</label>
+                                                <textarea id="restrictionMessage" rows="4" 
+                                                    class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
+                                                    placeholder="Enter reason for restriction (visible to user)..."></textarea>
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" id="saveBtn" class="w-full bg-navy-dark text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-navy-light shadow-2xl shadow-navy-dark/20 transition-all flex items-center justify-center gap-3">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i> Save Security Protocol
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="emptyState" class="text-center py-20">
+                        <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fa-solid fa-user-gear text-3xl text-slate-300"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-400">No User Selected</h3>
+                        <p class="text-slate-400 text-sm">Choose an account above to manage permissions.</p>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        let allUsers = [];
+
+        async function fetchUsers() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.innerHTML = '<option value="">Searching database...</option>';
+            
+            try {
+                const response = await fetch('/.netlify/functions/api', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}` 
+                    },
+                    body: JSON.stringify({ action: 'get-all-customers' })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    allUsers = data.customers || [];
+                    populateDropdown(allUsers);
+                }
+            } catch (err) {
+                dropdown.innerHTML = '<option value="">Error loading users</option>';
+            }
+        }
+
+        function populateDropdown(users) {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.innerHTML = '<option value="">-- Choose a Customer Profile --</option>';
+            
+            users.sort((a, b) => a.firstName.localeCompare(b.firstName)).forEach(user => {
+                const status = user.transferBlocked ? '🔴 BLOCKED' : '🟢 ACTIVE';
+                dropdown.innerHTML += `
+                    <option value="${user._id}">
+                        ${user.firstName} ${user.lastName} (${user.email}) - ${status}
+                    </option>`;
+            });
+        }
+
+        function handleUserSelection() {
+            const userId = document.getElementById('userDropdown').value;
+            const controlInterface = document.getElementById('controlInterface');
+            const emptyState = document.getElementById('emptyState');
+
+            if (!userId) {
+                controlInterface.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            const user = allUsers.find(u => u._id === userId);
+            if (user) {
+                renderControlPanel(user);
+                controlInterface.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+            }
+        }
+
+        function renderControlPanel(user) {
+            document.getElementById('selectedUserId').value = user._id;
+            document.getElementById('restrictionMessage').value = user.restrictionMessage || '';
+            
+            // Set Radio Buttons
+            const radios = document.getElementsByName('transferBlocked');
+            radios.forEach(r => r.checked = (r.value === String(user.transferBlocked)));
+
+            // Update Header
+            document.getElementById('userHeader').innerHTML = `
+                <div class="w-12 h-12 bg-navy-dark text-white rounded-xl flex items-center justify-center font-black">
+                    ${user.firstName[0]}${user.lastName[0]}
+                </div>
+                <div>
+                    <h4 class="font-bold text-navy-dark">${user.firstName} ${user.lastName}</h4>
+                    <p class="text-xs text-slate-500">${user.email}</p>
+                </div>
+            `;
+
+            const badge = document.getElementById('statusBadge');
+            if(user.transferBlocked) {
+                badge.className = "text-[10px] px-3 py-1 rounded-full font-black uppercase bg-red-500 text-white";
+                badge.innerText = "Restricted";
+            } else {
+                badge.className = "text-[10px] px-3 py-1 rounded-full font-black uppercase bg-green-500 text-white";
+                badge.innerText = "Operational";
+            }
+        }
+
+        async function submitUpdate(event) {
+            event.preventDefault();
+            const saveBtn = document.getElementById('saveBtn');
+            const originalContent = saveBtn.innerHTML;
+            const userId = document.getElementById('selectedUserId').value;
+
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating Core Systems...';
+
+            const updateData = {
+                transferBlocked: document.querySelector('input[name="transferBlocked"]:checked').value === 'true',
+                restrictionMessage: document.getElementById('restrictionMessage').value
+            };
+
+            try {
+                const response = await fetch('/.netlify/functions/api', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}` 
+                    },
+                    body: JSON.stringify({ action: 'admin-update-user', userId, updateData })
+                });
+
+                if (response.ok) {
+                    alert("Security protocols updated successfully.");
+                    await fetchUsers(); // Refresh local data
+                    // Re-select the same user to show updated status
+                    document.getElementById('userDropdown').value = userId;
+                    handleUserSelection();
+                }
+            } catch (err) {
+                alert("Network error.");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalContent;
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('hidden');
+        }
+
+        function logout() { 
+            sessionStorage.clear(); 
+            window.location.href = 'admin_login.html'; 
+        }
+
+        window.onload = fetchUsers;
+    </script>
+</body>
+</html>

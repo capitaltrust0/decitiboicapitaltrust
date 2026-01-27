@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Support - Capital Trust</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar { transition: all 0.3s; }
+        .bg-navy-dark { background-color: #002b49; }
+        .bg-navy-light { background-color: #004a7c; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; height: 100%; }
+            .sidebar.active { transform: translateX(0); }
+        }
+        .chat-container { height: calc(100vh - 64px); }
+        .message-bubble-user { border-radius: 15px 15px 15px 2px; background: #f1f5f9; border: 1px solid #e2e8f0; }
+        .message-bubble-admin { border-radius: 15px 15px 2px 15px; background: #004a7c; color: white; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .unread-indicator { width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased overflow-hidden text-sm">
+
+    <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black opacity-50 z-40 lg:hidden"></div>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar w-64 bg-navy-dark text-white flex-shrink-0 flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <span class="text-xl font-bold italic tracking-tighter">Capital<span class="text-red-500">Trust</span></span>
+            </div>
+            <nav class="flex-grow p-4 space-y-1 overflow-y-auto">
+                <a href="admin_dashboard.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-lg transition"><i class="fa-solid fa-gauge w-5 text-blue-300"></i> Dashboard</a>
+                <a href="chat-support.html" class="flex items-center gap-3 p-2.5 bg-navy-light rounded-lg transition"><i class="fa-solid fa-headset w-5 text-blue-300"></i> Chat Support</a>
+                <a href="allCustomers.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-lg transition"><i class="fa-solid fa-users w-5 text-blue-300"></i> All Customers</a>
+                <a href="applicationform.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-lg transition"><i class="fa-solid fa-file-invoice-dollar w-5 text-blue-300"></i> Pending Apps</a>
+                <a href="addsFund.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-lg transition"><i class="fa-solid fa-wallet w-5 text-blue-300"></i> Add Funds</a>
+                <a href="issueMessage.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-lg transition"><i class="fa-solid fa-envelope w-5 text-blue-300"></i> Issue Message</a>
+            </nav>
+            <div class="p-4 border-t border-white/10">
+                <button onclick="logout()" class="flex items-center gap-3 p-2.5 w-full text-red-400 hover:bg-red-400/10 rounded-lg transition"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            </div>
+        </aside>
+
+        <div class="flex-grow flex flex-col min-w-0 h-screen">
+            <header class="bg-white h-16 border-b flex items-center justify-between px-6 shrink-0">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden text-navy-light text-xl"><i class="fa-solid fa-bars"></i></button>
+                    <h1 class="font-bold text-gray-800 tracking-tight">Support Inbox</h1>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Administrator</span>
+                    <div class="w-8 h-8 rounded-full bg-navy-dark text-white flex items-center justify-center text-xs font-bold">AD</div>
+                </div>
+            </header>
+
+            <div class="flex flex-col lg:flex-row chat-container overflow-hidden">
+                <div class="w-full lg:w-80 bg-white border-r flex flex-col shrink-0 overflow-hidden" id="inbox-list">
+                    <div class="p-4 border-b bg-gray-50">
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input type="text" id="user-search" placeholder="Search customer..." 
+                                class="w-full pl-9 pr-3 py-2 bg-white border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition">
+                        </div>
+                    </div>
+                    <div id="user-list-container" class="flex-grow divide-y overflow-y-auto">
+                        <div class="p-10 text-center text-gray-400 text-xs italic">Syncing conversations...</div>
+                    </div>
+                </div>
+
+                <div class="flex-grow flex flex-col bg-gray-50 overflow-hidden relative">
+                    <div id="no-chat-selected" class="absolute inset-0 flex items-center justify-center bg-gray-50 z-20">
+                        <div class="text-center">
+                            <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                                <i class="fa-solid fa-comments text-3xl text-gray-200"></i>
+                            </div>
+                            <p class="text-gray-400 text-sm font-medium">Select a customer to view history</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 border-b flex items-center justify-between shrink-0 z-10">
+                        <div class="flex items-center gap-3">
+                            <div id="active-user-avatar" class="w-10 h-10 rounded-full bg-navy-dark text-white flex items-center justify-center font-bold text-sm shadow-inner">?</div>
+                            <div>
+                                <h3 id="active-user-name" class="font-bold text-gray-800 text-sm italic tracking-tight">--</h3>
+                                <p id="active-user-email" class="text-[10px] text-gray-400 font-medium">--</p>
+                            </div>
+                        </div>
+                        <button onclick="fetchConversations()" class="text-gray-400 hover:text-navy-light transition p-2"><i class="fa-solid fa-rotate"></i></button>
+                    </div>
+
+                    <div id="message-history" class="flex-grow overflow-y-auto p-6 space-y-6 bg-[#f8fafc]">
+                        </div>
+
+                    <div class="p-4 bg-white border-t shrink-0">
+                        <form id="admin-reply-form" onsubmit="handleAdminReply(event)" class="flex gap-2 max-w-5xl mx-auto">
+                            <input type="text" id="admin-input" placeholder="Type your secure response..." required autocomplete="off"
+                                class="flex-grow bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all">
+                            <button type="submit" class="bg-navy-dark text-white w-12 h-12 rounded-xl hover:bg-navy-light transition active:scale-95 flex items-center justify-center shadow-lg shadow-blue-900/10">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+       let selectedUserEmail = null; // Store email instead of just ID
+let allLoadedCustomers = [];
+const adminToken = sessionStorage.getItem('adminToken');
+
+if (!adminToken) window.location.href = 'admin_login.html';
+
+// 1. Fetch Conversations (Fetches all users with message history)
+async function fetchConversations(isPolling = false) {
+    try {
+        const response = await fetch('/.netlify/functions/api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+            body: JSON.stringify({ action: 'get-all-customers' }) 
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Filter to only show users who actually have a chat history
+            allLoadedCustomers = data.customers.filter(u => u.supportMessages && u.supportMessages.length > 0);
+            renderUserList(allLoadedCustomers);
+            
+            if (selectedUserEmail) {
+                renderMessagesForSelectedUser();
+            }
+        }
+    } catch (err) { 
+        console.error("Fetch error:", err); 
+    }
+}
+
+// 2. Render User List (The Inbox)
+function renderUserList(users) {
+    const container = document.getElementById('user-list-container');
+    
+    if (users.length === 0) {
+        container.innerHTML = '<div class="p-10 text-center text-gray-400 text-xs italic">No messages found.</div>';
+        return;
+    }
+
+    // Sort: Put users with "hasUnreadAdminReply: false" (meaning they sent a new message) at the top
+    users.sort((a, b) => {
+        const lastA = new Date(a.lastMessageAt || 0);
+        const lastB = new Date(b.lastMessageAt || 0);
+        return lastB - lastA;
+    });
+
+    container.innerHTML = users.map(user => {
+        const lastMsg = user.supportMessages[user.supportMessages.length - 1];
+        const isUnread = user.hasUnreadAdminReply === false && lastMsg.sender !== 'admin';
+        const initials = (user.firstName?.[0] || '') + (user.lastName?.[0] || 'U');
+        
+        return `
+            <div onclick="selectUser('${user.email}', '${user.firstName} ${user.lastName}')" 
+                 class="p-4 hover:bg-slate-50 cursor-pointer transition flex gap-3 items-center border-l-4 ${selectedUserEmail === user.email ? 'bg-blue-50 border-blue-600' : 'border-transparent'}">
+                <div class="relative">
+                    <div class="w-10 h-10 rounded-full bg-navy-dark text-white shrink-0 flex items-center justify-center font-bold text-xs">
+                        ${initials.toUpperCase()}
+                    </div>
+                    ${isUnread ? '<div class="absolute -top-1 -right-1 unread-indicator border-2 border-white"></div>' : ''}
+                </div>
+                <div class="min-w-0 flex-grow">
+                    <div class="flex justify-between items-center mb-0.5">
+                        <span class="font-bold text-gray-800 text-xs truncate">${user.firstName} ${user.lastName}</span>
+                        <span class="text-[9px] text-gray-400 font-medium">${formatDate(lastMsg.date)}</span>
+                    </div>
+                    <p class="text-[11px] ${isUnread ? 'text-blue-600 font-bold' : 'text-gray-500'} truncate">${lastMsg.text}</p>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// 3. Selection Logic (Now uses Email)
+function selectUser(email, name) {
+    selectedUserEmail = email;
+    document.getElementById('no-chat-selected').classList.add('hidden');
+    document.getElementById('active-user-name').innerText = name;
+    document.getElementById('active-user-email').innerText = email;
+    document.getElementById('active-user-avatar').innerText = name.split(' ').map(n => n[0]).join('').toUpperCase();
+    
+    renderMessagesForSelectedUser();
+}
+
+// 4. Render Thread
+// 4. Render Thread (Corrected for Left/Right differentiation)
+function renderMessagesForSelectedUser() {
+    const user = allLoadedCustomers.find(u => u.email === selectedUserEmail);
+    const historyContainer = document.getElementById('message-history');
+    if (!user) return;
+
+    // Use the admin email from your database for differentiation
+    const adminEmail = "capitaltrust0@outlook.com"; 
+
+    const html = (user.supportMessages || []).map(msg => {
+        // Correct Differentiation: 
+        // Admin = Left (justify-start)
+        // User (Misty) = Right (justify-end)
+        const isFromAdmin = msg.sender === adminEmail; 
+        
+        return `
+            <div class="flex ${isFromAdmin ? 'justify-start' : 'justify-end'} mb-4 animate-in fade-in slide-in-from-bottom-1 duration-300">
+                <div class="max-w-[75%] p-3.5 ${isFromAdmin 
+                    ? 'bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-tl-none' 
+                    : 'bg-[#004a7c] text-white rounded-2xl rounded-tr-none shadow-md shadow-blue-900/10'}">
+                    
+                    <p class="text-[12px] leading-relaxed whitespace-pre-wrap">${msg.text}</p>
+                    
+                    <div class="flex items-center ${isFromAdmin ? 'justify-start' : 'justify-end'} gap-1 mt-1.5 opacity-50">
+                        <p class="text-[8px] font-bold uppercase tracking-tighter">
+                            ${isFromAdmin ? 'Support' : 'Customer'} • ${new Date(msg.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Update only if content has changed to prevent scroll jumping
+    if (historyContainer.innerHTML !== html) {
+        historyContainer.innerHTML = html;
+        historyContainer.scrollTop = historyContainer.scrollHeight;
+    }
+}
+
+// 5. Send Reply (Sends by User Email)
+// admin-support.html - Inside handleAdminReply function
+async function handleAdminReply(e) {
+    e.preventDefault();
+    const input = document.getElementById('admin-input');
+    const text = input.value.trim();
+    
+    // Safety check: must have text and a selected user
+    if (!text || !selectedUserEmail) return;
+
+    // 1. INSTANT UI UPDATE (Optimistic)
+    // We manually push the message to the local object so it renders instantly
+    const user = allLoadedCustomers.find(u => u.email === selectedUserEmail);
+    const tempAdminMsg = {
+        text: text,
+        sender: "capitaltrust0@outlook.com", // Your admin email
+        date: new Date().toISOString(),
+        isTemp: true // Flag to identify it's not confirmed yet
+    };
+    
+    user.supportMessages.push(tempAdminMsg);
+    renderMessagesForSelectedUser(); // Redraw chat window immediately
+    input.value = ''; // Clear input field
+
+    try {
+        const response = await fetch('/.netlify/functions/api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+            body: JSON.stringify({ 
+                action: 'admin-reply-support', 
+                userEmail: selectedUserEmail, 
+                replyText: text 
+            })
+        });
+
+        if (!response.ok) throw new Error("Failed to sync");
+        
+        // 2. BACKGROUND SYNC
+        // Optional: remove the 'isTemp' flag once server confirms
+        delete tempAdminMsg.isTemp; 
+
+    } catch (err) {
+        console.error("Reply failed:", err);
+        alert("Message failed to send. Please check your connection.");
+        // Optional: Remove the message from UI if it failed
+        user.supportMessages = user.supportMessages.filter(m => !m.isTemp);
+        renderMessagesForSelectedUser();
+    }
+}
+
+        // Helpers
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            if (date.toDateString() === now.toDateString()) return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            return date.toLocaleDateString([], {month: 'short', day: 'numeric'});
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('hidden');
+        }
+
+        function logout() { sessionStorage.clear(); window.location.href = 'admin_login.html'; }
+
+        // Search Filter
+        document.getElementById('user-search').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allLoadedCustomers.filter(u => 
+                `${u.firstName} ${u.lastName}`.toLowerCase().includes(term) || u.email.toLowerCase().includes(term)
+            );
+            renderUserList(filtered);
+        });
+
+        // Initialize & Auto-Poll
+        window.onload = () => fetchConversations();
+        setInterval(() => fetchConversations(true), 8000);
+    </script>
+</body>
+</html>

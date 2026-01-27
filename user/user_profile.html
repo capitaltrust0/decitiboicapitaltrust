@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Capital Trusts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .bg-navy-sidebar { background-color: #004a7c; }
+        .bg-navy-dark { background-color: #002b49; }
+        .card-shadow { box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+        .profile-img { object-fit: cover; width: 100%; height: 100%; }
+        
+        #sidebar { transition: transform 0.3s ease-in-out; }
+        @media (max-width: 768px) {
+            #sidebar.closed { transform: translateX(-100%); }
+        }
+
+        .loader { 
+            border: 2px solid #f3f3f3; 
+            border-top: 2px solid #004a7c; 
+            border-radius: 50%; 
+            width: 20px; 
+            height: 20px; 
+            animation: spin 1s linear infinite; 
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+        }
+    </style>
+</head>
+<body class="bg-[#f4f7f9] font-sans antialiased text-slate-800 text-[13px] md:text-sm">
+
+    <div id="passwordModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl transition-all scale-95 opacity-0 duration-300" id="modalContainer">
+            <div class="p-5 border-b flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-navy-dark uppercase text-xs tracking-widest">Update Password</h3>
+                <button onclick="closePasswordModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="passwordForm" onsubmit="handlePasswordChange(event)" class="p-5 space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Current Password</label>
+                    <input type="password" id="currentPassword" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">New Password</label>
+                    <input type="password" id="newPassword" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                </div>
+                <div id="passwordError" class="hidden text-red-500 text-[10px] font-bold italic"></div>
+                <button type="submit" id="submitPassBtn" class="w-full py-3 bg-navy-sidebar text-white rounded-lg font-bold text-xs hover:bg-navy-dark transition-all">
+                    SAVE CHANGES
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="flex min-h-screen overflow-hidden">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-60 bg-navy-sidebar text-white transform md:relative md:translate-x-0 transition-transform duration-300 ease-in-out shadow-xl closed">
+            <div class="p-5 flex flex-col h-full">
+                <div class="flex items-center justify-between mb-6">
+                    <span class="text-xl font-bold italic tracking-tighter">Capital<span class="text-red-500">Trusts</span></span>
+                    <button onclick="toggleSidebar()" class="md:hidden text-white/70">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+
+                <nav class="flex-grow space-y-1">
+                    <a href="user_dashboard.html" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/10 transition text-white/80">
+                        <i class="fa-solid fa-house w-4 text-center text-xs"></i>
+                        <span class="font-medium text-xs">Dashboard</span>
+                    </a>
+                    <a href="user_profile.html" class="flex items-center gap-3 p-2.5 rounded-lg bg-white/10 text-white border-l-4 border-red-500 transition">
+                        <i class="fa-solid fa-user w-4 text-center text-xs"></i>
+                        <span class="font-medium text-xs">My Profile</span>
+                    </a>
+                     <a href="cards.html" class="flex items-center gap-3 p-2.5 rounded-lg bg-white/10 text-white border-l-4 border-red-500 transition">
+                        <i class="fa-solid fa-user w-4 text-center text-xs"></i>
+                        <span class="font-medium text-xs">Credit Card</span>
+                    </a>
+                     <a href="transfer.html" class="flex items-center gap-3 p-2.5 rounded-lg bg-white/10 text-white border-l-4 border-red-500 transition">
+                        <i class="fa-solid fa-user w-4 text-center text-xs"></i>
+                        <span class="font-medium text-xs">Transfer</span>
+                    </a>
+                </nav>
+
+                <div class="mt-auto pt-4 border-t border-white/10">
+                    <button onclick="logout()" class="flex items-center gap-3 p-2.5 w-full rounded-lg hover:bg-red-500/20 text-red-400 transition">
+                        <i class="fa-solid fa-right-from-bracket w-4 text-center text-xs"></i>
+                        <span class="font-medium text-xs">Sign Out</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col h-screen overflow-y-auto">
+            <header class="bg-white h-14 flex items-center justify-between px-4 md:px-8 border-b sticky top-0 z-40">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="md:hidden text-slate-600">
+                        <i class="fa-solid fa-bars text-lg"></i>
+                    </button>
+                    <h2 class="font-bold text-navy-dark text-sm hidden sm:block uppercase tracking-wider">Profile Settings</h2>
+                </div>
+                <div id="user-initials-top" class="w-8 h-8 rounded-full bg-navy-dark text-white flex items-center justify-center font-bold text-[10px] shadow-sm overflow-hidden">
+                    ??
+                </div>
+            </header>
+
+            <main class="p-4 md:p-6 max-w-4xl mx-auto w-full space-y-4">
+                <div class="bg-white rounded-xl p-5 md:p-6 card-shadow border border-slate-100 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                    <div class="relative group">
+                        <div id="avatar-container" onclick="document.getElementById('profileInput').click()" class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-2xl font-bold border-2 border-white shadow-md overflow-hidden cursor-pointer transition-transform hover:scale-105">
+                            ??
+                        </div>
+                        <div class="absolute bottom-0 right-0 bg-navy-sidebar text-white p-1 rounded-full border-2 border-white text-[8px]">
+                            <i class="fa-solid fa-pencil"></i>
+                        </div>
+                        <input type="file" id="profileInput" class="hidden" accept="image/*" onchange="uploadProfilePic(this)">
+                    </div>
+
+                    <div class="flex-grow">
+                        <h1 id="full-name" class="text-lg md:text-xl font-bold text-navy-dark leading-tight">Loading...</h1>
+                        <p id="user-email" class="text-slate-400 text-[11px] font-medium"></p>
+                        <div class="mt-2 flex flex-wrap justify-center sm:justify-start gap-2">
+                            <span id="account-status-badge" class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-tight bg-slate-100 text-slate-500">...</span>
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-tight bg-blue-50 text-blue-500">
+                                Member <span id="member-since">2026</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white rounded-xl card-shadow overflow-hidden border border-slate-100">
+                        <div class="p-3.5 border-b border-slate-50 bg-slate-50/50">
+                            <h3 class="font-bold text-navy-dark text-xs flex items-center gap-2 uppercase tracking-tight">
+                                <i class="fa-solid fa-address-card text-blue-600"></i> Personal Details
+                            </h3>
+                        </div>
+                        <div class="p-4 space-y-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-[9px] uppercase font-bold text-slate-400">Gender</label>
+                                    <p id="display-gender" class="text-slate-700 font-semibold text-[12px] truncate">-</p>
+                                </div>
+                                <div>
+                                    <label class="text-[9px] uppercase font-bold text-slate-400">Date of Birth</label>
+                                    <p id="display-dob" class="text-slate-700 font-semibold text-[12px]">-</p>
+                                </div>
+                                <div>
+                                    <label class="text-[9px] uppercase font-bold text-slate-400">Occupation</label>
+                                    <p id="display-occupation" class="text-slate-700 font-semibold text-[12px] truncate">-</p>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[9px] uppercase font-bold text-slate-400">Phone</label>
+                                <p id="display-phone" class="text-slate-700 font-semibold text-[12px]">-</p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] uppercase font-bold text-slate-400">Address</label>
+                                <p id="display-address" class="text-slate-700 font-semibold text-[11px] leading-snug">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl card-shadow overflow-hidden border border-slate-100">
+                        <div class="p-3.5 border-b border-slate-50 bg-slate-50/50">
+                            <h3 class="font-bold text-navy-dark text-xs flex items-center gap-2 uppercase tracking-tight">
+                                <i class="fa-solid fa-coins text-blue-600"></i> Account Details
+                            </h3>
+                        </div>
+                        <div class="p-4 space-y-3">
+                            <div>
+                                <label class="text-[9px] uppercase font-bold text-slate-400">Currency</label>
+                                <p id="display-currency" class="text-blue-600 font-bold text-[12px] uppercase">-</p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] uppercase font-bold text-slate-400">Account Number</label>
+                                <p id="display-account-number" class="text-slate-700 font-bold text-[13px] tracking-wider font-mono">-</p>
+                            </div>
+                            
+                            <div id="currency-specific-fields" class="space-y-3 pt-1 border-t border-slate-50">
+                                </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl card-shadow overflow-hidden border border-slate-100 md:col-span-2">
+                        <div class="p-3.5 border-b border-slate-50 bg-slate-50/50">
+                            <h3 class="font-bold text-navy-dark text-xs flex items-center gap-2 uppercase tracking-tight">
+                                <i class="fa-solid fa-shield-check text-blue-600"></i> Security & Safety
+                            </h3>
+                        </div>
+                        <div class="p-4 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[11px] font-bold text-slate-700">Login Security</p>
+                                    <p class="text-[10px] text-slate-400 font-bold">Manage your password</p>
+                                </div>
+                                <button onclick="openPasswordModal()" class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg font-bold text-[10px] hover:bg-blue-100 transition">
+                                    CHANGE PASSWORD
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between border-t border-slate-50 pt-4">
+                                <div>
+                                    <p class="text-[11px] font-bold text-slate-700">Account Safety</p>
+                                    <p class="text-[10px] text-green-600 font-bold italic">2FA Protected</p>
+                                </div>
+                                <i class="fa-solid fa-shield-halved text-green-100 text-lg"></i>
+                            </div>
+                            <div class="pt-2">
+                                <button onclick="logout()" class="w-full py-2.5 bg-red-50 text-red-600 rounded-lg font-bold text-[11px] hover:bg-red-100 transition">
+                                    <i class="fa-solid fa-power-off mr-1"></i> LOGOUT
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+<script>
+    const token = sessionStorage.getItem('userToken');
+    if (!token) window.location.assign('/index.html');
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('closed');
+    }
+
+    async function apiRequest(data) {
+        try {
+            const response = await fetch('/.netlify/functions/api', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            if (response.status === 401) { logout(); return; }
+            if (!response.ok) throw new Error(result.message || 'Failed');
+            return result;
+        } catch (err) {
+            console.error("API Error:", err);
+            throw err;
+        }
+    }
+
+    // Modal Handlers
+    function openPasswordModal() {
+        const modal = document.getElementById('passwordModal');
+        const container = document.getElementById('modalContainer');
+        modal.classList.remove('hidden');
+        setTimeout(() => container.classList.remove('scale-95', 'opacity-0'), 10);
+    }
+
+    function closePasswordModal() {
+        const modal = document.getElementById('passwordModal');
+        const container = document.getElementById('modalContainer');
+        container.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            document.getElementById('passwordForm').reset();
+            document.getElementById('passwordError').classList.add('hidden');
+        }, 300);
+    }
+
+    async function handlePasswordChange(e) {
+        e.preventDefault();
+        const currentPass = document.getElementById('currentPassword').value;
+        const newPass = document.getElementById('newPassword').value;
+        const confirmPass = document.getElementById('confirmPassword').value;
+        const errorEl = document.getElementById('passwordError');
+        const btn = document.getElementById('submitPassBtn');
+
+        if (newPass !== confirmPass) {
+            errorEl.innerText = "New passwords do not match.";
+            errorEl.classList.remove('hidden');
+            return;
+        }
+
+        try {
+            btn.disabled = true;
+            btn.innerHTML = `<div class="loader mx-auto"></div>`;
+            await apiRequest({ action: 'change-password', currentPassword: currentPass, newPassword: newPass });
+            alert("Password updated successfully!");
+            closePasswordModal();
+        } catch (err) {
+            errorEl.innerText = err.message || "Failed to update password.";
+            errorEl.classList.remove('hidden');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "SAVE CHANGES";
+        }
+    }
+
+    async function loadProfile() {
+        try {
+            const userData = await apiRequest({ action: 'get-user-profile' });
+            renderProfile(userData);
+
+            if (userData.profilePicKey) {
+                const picData = await apiRequest({ action: 'get-profile-pic' });
+                if (picData.url) updateAvatarImages(picData.url);
+            }
+        } catch (err) {
+            console.error("Profile load failed:", err);
+            window.location.assign('/user/user_dashboard.html');
+        }
+    }
+
+    function renderProfile(userData) {
+        const initials = `${userData.firstName ? userData.firstName[0] : '?'}${userData.lastName ? userData.lastName[0] : '?'}`.toUpperCase();
+        document.getElementById('full-name').innerText = `${userData.firstName} ${userData.lastName}`;
+        document.getElementById('user-email').innerText = userData.email;
+        document.getElementById('avatar-container').innerText = initials;
+        document.getElementById('user-initials-top').innerText = initials;
+        
+        document.getElementById('display-gender').innerText = (userData.gender || 'Not specified').toUpperCase();
+        document.getElementById('display-occupation').innerText = userData.occupation || 'Not specified';
+        document.getElementById('display-phone').innerText = userData.phone || 'N/A';
+        
+        if (userData.dob) {
+            document.getElementById('display-dob').innerText = new Date(userData.dob).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+        }
+
+        const currencyCode = (userData.currency || 'USD').toUpperCase();
+        document.getElementById('display-currency').innerText = currencyCode;
+        
+        const accNo = (userData.accounts && userData.accounts.checking) ? userData.accounts.checking.accountNumber : 'N/A';
+        document.getElementById('display-account-number').innerText = accNo;
+
+        // Regional Banking Fields Logic
+        const dynamicContainer = document.getElementById('currency-specific-fields');
+        let fieldsHtml = '';
+        const card = userData.card || {};
+
+        const createField = (label, value) => `
+            <div class="mb-3">
+                <label class="text-[9px] uppercase font-bold text-slate-400 block">${label}</label>
+                <p class="text-slate-700 font-semibold text-[12px] break-all">${value || 'N/A'}</p>
+            </div>
+        `;
+
+        switch(currencyCode) {
+            case 'USD':
+                fieldsHtml = createField('Routing Number (ABA)', card.routingNumber);
+                fieldsHtml += createField('SWIFT / BIC', card.swiftCode);
+                break;
+
+            case 'CAD':
+                fieldsHtml = `
+                    <div class="grid grid-cols-2 gap-2">
+                        ${createField('Transit Number', card.transitNumber)}
+                        ${createField('Institution No.', card.institutionNumber)}
+                    </div>
+                    ${createField('SWIFT / BIC', card.swiftCode)}
+                `;
+                break;
+
+            case 'GBP':
+                fieldsHtml = createField('UK Sort Code', card.sortCode);
+                fieldsHtml += createField('IBAN', card.iban);
+                fieldsHtml += createField('SWIFT / BIC', card.swiftCode);
+                break;
+
+            case 'EUR':
+                fieldsHtml = createField('IBAN', card.iban);
+                fieldsHtml += createField('SWIFT / BIC', card.swiftCode);
+                break;
+
+            case 'AUD':
+                fieldsHtml = createField('BSB Code', card.bsbCode);
+                fieldsHtml += createField('SWIFT / BIC', card.swiftCode);
+                break;
+
+            case 'MXN':
+                fieldsHtml = createField('CLABE (18-digits)', card.clabe);
+                break;
+
+            case 'PHP':
+                fieldsHtml = createField('Bank Code / BRSTN', card.bankCode);
+                fieldsHtml += createField('SWIFT / BIC', card.swiftCode);
+                break;
+
+            default:
+                fieldsHtml = createField('SWIFT / BIC', card.swiftCode);
+                if(card.iban) fieldsHtml += createField('IBAN', card.iban);
+                if(card.routingNumber) fieldsHtml += createField('Routing/Sort Code', card.routingNumber);
+        }
+        dynamicContainer.innerHTML = fieldsHtml;
+
+        if (userData.address && typeof userData.address === 'object') {
+            const a = userData.address;
+            document.getElementById('display-address').innerText = [a.street, a.city, a.state, a.country].filter(Boolean).join(', ') || 'Incomplete';
+        }
+
+        document.getElementById('member-since').innerText = userData.createdAt ? new Date(userData.createdAt).getFullYear() : '2026';
+
+        const statusBadge = document.getElementById('account-status-badge');
+        const status = userData.status || 'Active';
+        statusBadge.innerText = status;
+        statusBadge.className = status === 'Active' 
+            ? "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-tight bg-green-50 text-green-500"
+            : "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-tight bg-red-50 text-red-500";
+    }
+
+    function updateAvatarImages(url) {
+        const imgTag = `<img src="${url}" class="profile-img">`;
+        document.getElementById('avatar-container').innerHTML = imgTag;
+        document.getElementById('user-initials-top').innerHTML = imgTag;
+    }
+
+    async function uploadProfilePic(input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        const reader = new FileReader();
+        document.getElementById('avatar-container').innerHTML = `<div class="loader"></div>`;
+
+        reader.onloadend = async () => {
+            try {
+                await apiRequest({ 
+                    action: 'upload-profile-pic',
+                    imageBase64: reader.result, 
+                    fileName: file.name,
+                    fileType: file.type
+                });
+                loadProfile(); 
+            } catch (err) {
+                alert("Upload failed.");
+                loadProfile();
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function logout() {
+        sessionStorage.clear();
+        window.location.assign('/index.html');
+    }
+
+    window.onload = loadProfile;
+</script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Capital Trust</title>
+    <script>
+        if (!sessionStorage.getItem('adminToken')) {
+            window.location.href = 'admin_login.html';
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar { transition: all 0.3s; }
+        .bg-navy-dark { background-color: #002b49; }
+        .bg-navy-light { background-color: #004a7c; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; height: 100%; }
+            .sidebar.active { transform: translateX(0); }
+        }
+        .status-pill { padding: 2px 8px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+
+    <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black opacity-50 z-40 lg:hidden"></div>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar w-64 bg-navy-dark text-white flex-shrink-0 flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <span class="text-xl font-bold italic tracking-tighter">Capital<span class="text-red-500">Trust</span></span>
+                <p class="text-[10px] uppercase tracking-widest text-gray-400 mt-1">Management Suite</p>
+            </div>
+
+            <nav class="flex-grow p-4 space-y-2">
+                <a href="admin_dashboard.html" class="flex items-center gap-3 p-3 bg-navy-light rounded-lg transition">
+                    <i class="fa-solid fa-gauge w-5"></i> Dashboard
+                </a>
+                <a href="allCustomers.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> All Customers
+                </a>
+                <a href="chat-support.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Chat Supports
+                </a>
+                <a href="applicationform.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-file-invoice-dollar w-5"></i> Pending Apps
+                    <span id="pendingBadge" class="ml-auto bg-red-500 text-[10px] px-2 py-0.5 rounded-full">0</span>
+                </a>
+                 <a href="addsFund.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Add Funds
+                </a>
+                <a href="issueMessage.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Issue Message
+                </a>
+                 <a href="transferUpdate.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Transfer Update
+                </a>
+                    <a href="depositReview.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Deposit Review
+                </a>
+                 <a href="emailSender.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Email Sender
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-white/10">
+                <button onclick="logout()" class="flex items-center gap-3 p-3 w-full text-red-400 hover:bg-red-400/10 rounded-lg transition">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <div class="flex-grow flex flex-col min-w-0">
+            <header class="bg-white h-16 border-b flex items-center justify-between px-6 sticky top-0 z-30">
+                <button onclick="toggleSidebar()" class="lg:hidden text-navy-light text-xl"><i class="fa-solid fa-bars"></i></button>
+                <div class="flex items-center gap-4">
+                    <div class="text-right hidden sm:block">
+                        <p id="adminDisplayName" class="text-sm font-bold text-gray-800 leading-none">Admin</p>
+                        <p class="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Authorized Session</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-bold" id="adminAvatar">A</div>
+                </div>
+            </header>
+
+            <main class="p-4 md:p-8 space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <p class="text-sm text-gray-500 font-bold uppercase">Total Deposits</p>
+                        <h3 id="statDeposits" class="text-2xl font-bold text-gray-800">$0.00</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <p class="text-sm text-gray-500 font-bold uppercase">Active Users</p>
+                        <h3 id="statUsers" class="text-2xl font-bold text-gray-800">0</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <p class="text-sm text-gray-500 font-bold uppercase">Pending KYCs</p>
+                        <h3 id="statPending" class="text-2xl font-bold text-amber-600">0</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <p class="text-sm text-gray-500 font-bold uppercase">System Status</p>
+                        <h3 class="text-2xl font-bold text-green-600">Online</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="p-6 border-b flex items-center justify-between">
+                        <h2 class="text-lg font-bold text-gray-800">Recent Applications</h2>
+                        <button onclick="loadDashboardData()" class="text-blue-600 hover:rotate-180 transition-all duration-500">
+                            <i class="fa-solid fa-sync"></i>
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                           <thead class="bg-gray-50 text-gray-500 text-[10px] uppercase font-bold border-b">
+    <tr>
+        <th class="px-6 py-4">Applicant</th>
+        <th class="px-6 py-4">Gender</th> <th class="px-6 py-4">Account Type</th>
+        <th class="px-6 py-4">Status</th>
+        <th class="px-6 py-4">Action</th>
+    </tr>
+</thead>
+<tbody id="appTableBody" class="divide-y text-sm">
+    </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Set Admin Name from session
+        document.getElementById('adminDisplayName').innerText = sessionStorage.getItem('adminUser') || 'Administrator';
+        document.getElementById('adminAvatar').innerText = (sessionStorage.getItem('adminUser') || 'A').charAt(0).toUpperCase();
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('hidden');
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'admin_login.html';
+        }
+
+        // FETCH DATA FROM MONGODB VIA API.JS
+    async function loadDashboardData() {
+    const tableBody = document.getElementById('appTableBody');
+    tableBody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Syncing secure data...</td></tr>';
+
+    try {
+        const response = await fetch('/.netlify/functions/api', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}` 
+            },
+            body: JSON.stringify({ action: 'get-dashboard-data' })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            document.getElementById('statDeposits').innerText = `$${(data.totalBalance || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('statUsers').innerText = data.totalUsers || 0;
+            document.getElementById('statPending').innerText = data.pendingCount || 0;
+            document.getElementById('pendingBadge').innerText = data.pendingCount || 0;
+
+            tableBody.innerHTML = '';
+            if (data.recentApplications && data.recentApplications.length > 0) {
+                data.recentApplications.forEach(app => {
+                    
+                    // --- PROFILE PICTURE LOGIC ---
+                    // Priority: 1. DB URL, 2. UI-Avatar fallback
+                    const avatar = (app.profilePicUrl && app.profilePicUrl.startsWith('http')) 
+                        ? app.profilePicUrl 
+                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(app.fullName)}&background=002b49&color=fff`;
+
+                    // --- GENDER BADGE LOGIC ---
+                    const genderLabel = app.gender ? app.gender.charAt(0).toUpperCase() + app.gender.slice(1) : 'N/A';
+                    const genderColor = app.gender === 'male' ? 'text-blue-600 bg-blue-50' : 
+                                       app.gender === 'female' ? 'text-pink-600 bg-pink-50' : 'text-gray-600 bg-gray-50';
+
+                    tableBody.innerHTML += `
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <img src="${avatar}" 
+                                         onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(app.fullName)}'" 
+                                         class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover">
+                                    <div>
+                                        <div class="font-bold text-gray-800">${app.fullName || 'Unknown Applicant'}</div>
+                                        <div class="text-[11px] text-gray-500">${app.email}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-md ${genderColor}">
+                                    ${genderLabel}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-xs font-semibold text-navy-light bg-blue-50 px-2 py-1 rounded inline-block">
+                                    ${app.accountType || '360 Checking'}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="status-pill bg-amber-100 text-amber-700 uppercase tracking-tighter">
+                                    ${app.status}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <a href="applicationform.html?id=${app._id}" class="bg-navy-dark text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-navy-light transition shadow-sm">
+                                    Review
+                                </a>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-gray-400 font-medium">No pending applications.</td></tr>';
+            }
+        } else {
+            tableBody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-500 font-bold">Session Expired.</td></tr>`;
+        }
+    } catch (err) {
+        console.error("Dashboard error:", err);
+        tableBody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-500">Critical connection failure.</td></tr>';
+    }
+}
+
+        // Initial Load
+        window.onload = loadDashboardData;
+    </script>
+</body>
+</html>

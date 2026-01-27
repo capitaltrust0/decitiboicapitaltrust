@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Deposit - Capital Trusts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar { transition: all 0.3s ease; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; }
+            .sidebar.active { transform: translateX(0); }
+        }
+        .bg-navy-sidebar { background-color: #004a7c; }
+        .bg-navy-dark { background-color: #002b49; }
+        .card-shadow { box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+        
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-zone:hover { border-color: #0071ba; background-color: #f8fafc; }
+        .preview-img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
+        
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .anim-pulse { animation: pulse-soft 2s infinite; }
+    </style>
+</head>
+<body class="bg-[#f4f7f9] font-sans antialiased text-slate-800 text-[13px] md:text-sm">
+
+    <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar w-60 bg-navy-sidebar text-white flex flex-col flex-shrink-0 min-h-screen">
+            <div class="p-5">
+                <span class="text-lg font-bold italic tracking-tighter text-white">Capital<span class="text-red-500">Trusts</span></span>
+            </div>
+            <nav class="flex-grow px-3 space-y-1">
+                <a href="user_dashboard.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs">
+                    <i class="fa-solid fa-house w-4 text-blue-300"></i> Dashboard
+                </a>
+                <div class="bg-navy-dark rounded-md p-2.5 mb-4 flex items-center gap-3 cursor-pointer">
+                    <i class="fa-solid fa-camera text-xs text-blue-300"></i>
+                    <span class="text-xs font-semibold text-blue-100">Mobile Deposit</span>
+                </div>
+                <a href="transfer.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs"><i class="fa-solid fa-paper-plane w-4 text-blue-300"></i> Transfer</a>
+                <a href="cards.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs"><i class="fa-solid fa-credit-card w-4 text-blue-300"></i> Credit Cards</a>
+                <a href="user_profile.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs border-t border-white/5 pt-4 mt-4"><i class="fa-solid fa-user w-4 text-blue-300"></i> Profile</a>
+                <button onclick="logout()" class="w-full flex items-center gap-3 p-2.5 hover:bg-red-500/20 rounded-md transition text-xs mt-auto text-red-300"><i class="fa-solid fa-right-from-bracket w-4"></i> Sign Out</button>
+            </nav>
+        </aside>
+
+        <main class="flex-grow flex flex-col min-w-0">
+            <header class="bg-white h-14 flex items-center px-4 md:px-6 border-b justify-between">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="lg:hidden text-navy-dark text-lg mr-1"><i class="fa-solid fa-bars"></i></button>
+                    <h1 class="font-bold text-navy-dark">Mobile Check Deposit</h1>
+                </div>
+                <div id="user-avatar-container" class="w-8 h-8 rounded-full bg-navy-dark text-white flex items-center justify-center font-bold text-[10px] shadow-sm overflow-hidden">
+                    <span id="user-initials">??</span>
+                </div>
+            </header>
+
+            <div class="p-4 md:p-8 max-w-2xl mx-auto w-full">
+                <div id="processing-section" class="hidden mb-8">
+                    <h3 class="text-[10px] font-bold text-slate-400 uppercase mb-3 tracking-widest">Under Review</h3>
+                    <div id="pending-list" class="space-y-3"></div>
+                </div>
+
+                <div class="mb-6 bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl">
+                    <h3 class="text-amber-800 font-bold text-xs uppercase mb-1">Instructions:</h3>
+                    <ul class="text-[11px] text-amber-700 space-y-1 list-disc ml-4">
+                        <li>Sign the back and write <b>"For Mobile Deposit Only"</b>.</li>
+                        <li>Take the photo in a well-lit area against a dark background.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-2xl card-shadow overflow-hidden border border-slate-100">
+                    <form id="depositForm" class="p-6 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Deposit To</label>
+                                <select id="accountSelect" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="checking">Checking Account</option>
+                                    <option value="savings">Savings Account</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Check Amount</label>
+                                <div class="relative">
+                                    <span id="currency-label" class="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                                    <input type="number" id="depositAmount" placeholder="0.00" step="0.01" required
+                                        class="w-full pl-10 pr-3 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Memo</label>
+                            <input type="text" id="depositMemo" placeholder="e.g. Monthly Rent" 
+                                class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div class="space-y-4">
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase">Capture Check Images</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="space-y-2">
+                                    <p class="text-[10px] text-center font-bold text-slate-500 uppercase">Front</p>
+                                    <div class="upload-zone h-32 rounded-xl flex flex-col items-center justify-center cursor-pointer" onclick="document.getElementById('checkFront').click()">
+                                        <div id="front-placeholder" class="text-center p-2">
+                                            <i class="fa-solid fa-camera text-slate-300 text-xl mb-1"></i>
+                                            <p class="text-[9px] text-slate-400 font-medium">Capture Front</p>
+                                        </div>
+                                        <input type="file" id="checkFront" accept="image/*" capture="environment" class="hidden" onchange="previewImage(this, 'front-preview', 'front-placeholder')">
+                                        <img id="front-preview" class="preview-img hidden">
+                                    </div>
+                                </div>
+                                <div class="space-y-2">
+                                    <p class="text-[10px] text-center font-bold text-slate-500 uppercase">Back</p>
+                                    <div class="upload-zone h-32 rounded-xl flex flex-col items-center justify-center cursor-pointer" onclick="document.getElementById('checkBack').click()">
+                                        <div id="back-placeholder" class="text-center p-2">
+                                            <i class="fa-solid fa-signature text-slate-300 text-xl mb-1"></i>
+                                            <p class="text-[9px] text-slate-400 font-medium">Capture Back</p>
+                                        </div>
+                                        <input type="file" id="checkBack" accept="image/*" capture="environment" class="hidden" onchange="previewImage(this, 'back-preview', 'back-placeholder')">
+                                        <img id="back-preview" class="preview-img hidden">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="w-full bg-[#0071ba] text-white py-4 rounded-xl font-bold hover:bg-blue-800 transition shadow-lg flex items-center justify-center gap-2">
+                            <span>Submit Deposit</span>
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="pinModal" class="fixed inset-0 bg-navy-dark/90 z-[60] hidden flex items-center justify-center p-4">
+                <div class="bg-white w-full max-w-sm rounded-3xl p-6 text-center space-y-4 shadow-2xl">
+                    <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-navy-dark">Authorize Deposit</h2>
+                        <p class="text-xs text-slate-500">Enter your 4-digit Transfer PIN to confirm.</p>
+                    </div>
+                    <input type="password" id="transferPin" maxlength="4" inputmode="numeric" placeholder="****" 
+                        class="w-32 mx-auto text-center text-2xl tracking-[10px] font-bold p-3 border-b-2 border-blue-500 outline-none">
+                    <div class="flex gap-3 pt-2">
+                        <button onclick="closePinModal()" class="flex-1 py-3 text-slate-500 font-bold text-xs">Cancel</button>
+                        <button id="confirmBtn" onclick="processFinalSubmission()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-xs shadow-md">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+    const token = sessionStorage.getItem('userToken');
+    if (!token) window.location.href = '/index.html';
+
+    let userSymbol = '$';
+
+    function initPage() {
+        const cached = localStorage.getItem(`dashboard_${token.substring(0,10)}`);
+        if (cached) {
+            const userData = JSON.parse(cached);
+            
+            // Map Currency
+            const currencyMap = { 
+                'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': '$', 
+                'CAD': 'CA$', 'MXN': '$', 'PHP': '₱' 
+            };
+            userSymbol = currencyMap[userData.currency] || '$';
+            
+            // Update UI Labels
+            document.getElementById('user-initials').innerText = `${userData.firstName[0]}${userData.lastName[0]}`.toUpperCase();
+            document.getElementById('currency-label').innerText = userSymbol;
+            
+            // Check for pending deposits in history
+            displayProcessingChecks(userData.transactions || []);
+        }
+    }
+
+   function displayProcessingChecks(transactions) {
+    const processingSection = document.getElementById('processing-section');
+    const pendingList = document.getElementById('pending-list');
+    
+    // Check for any status starting with "Pending"
+    const pending = transactions.filter(t => 
+        t.type === 'Mobile Deposit' && 
+        (t.status.startsWith('Pending'))
+    );
+
+    if (pending.length > 0) {
+        processingSection.classList.remove('hidden');
+        pendingList.innerHTML = pending.map(item => `
+            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex justify-between items-center anim-pulse">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xs">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-navy-dark text-[11px]">${item.description}</p>
+                        <p class="text-[9px] text-blue-500 font-bold uppercase tracking-tighter italic">Reviewing Images...</p>
+                    </div>
+                </div>
+                <p class="font-bold text-slate-700 text-xs">${userSymbol}${parseFloat(item.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+            </div>
+        `).join('');
+    }
+}
+
+    function previewImage(input, previewId, placeholderId) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const preview = document.getElementById(previewId);
+                const placeholder = document.getElementById(placeholderId);
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    document.getElementById('depositForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const front = document.getElementById('checkFront').files[0];
+        const back = document.getElementById('checkBack').files[0];
+        
+        if (!front || !back) return alert("Please capture both sides of the check.");
+        
+        document.getElementById('pinModal').classList.remove('hidden');
+        document.getElementById('transferPin').focus();
+    });
+
+    function closePinModal() {
+        document.getElementById('pinModal').classList.add('hidden');
+        document.getElementById('transferPin').value = '';
+    }
+
+    async function processFinalSubmission() {
+        const pin = document.getElementById('transferPin').value;
+        const confirmBtn = document.getElementById('confirmBtn');
+
+        if (pin.length !== 4) return alert("Enter a valid 4-digit PIN");
+
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i>`;
+
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+
+        try {
+            const frontImg = await toBase64(document.getElementById('checkFront').files[0]);
+            const backImg = await toBase64(document.getElementById('checkBack').files[0]);
+
+            const payload = {
+                action: 'submit-mobile-deposit',
+                amount: document.getElementById('depositAmount').value,
+                account: document.getElementById('accountSelect').value,
+                memo: document.getElementById('depositMemo').value,
+                transferPin: pin,
+                frontImage: frontImg,
+                backImage: backImg
+            };
+
+            const response = await fetch('/.netlify/functions/api', {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                confirmBtn.innerHTML = `<i class="fa-solid fa-check"></i> Submitted`;
+                confirmBtn.classList.replace('bg-blue-600', 'bg-green-600');
+                
+                setTimeout(() => {
+                    alert("Deposit Received! Your check is now being processed.");
+                    window.location.href = 'user_dashboard.html';
+                }, 1000);
+            } else {
+                alert(result.message || "Error processing deposit.");
+                confirmBtn.disabled = false;
+                confirmBtn.innerText = "Confirm";
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Connection error. Please try again.");
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = "Confirm";
+        }
+    }
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('overlay').classList.toggle('hidden');
+    }
+
+    function logout() { sessionStorage.clear(); window.location.href = '/index.html'; }
+    window.onload = initPage;
+</script>
+</body>
+</html>

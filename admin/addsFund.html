@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Funds - Capital Trust</title>
+    <script>
+        // Security Check
+        if (!sessionStorage.getItem('adminToken')) window.location.href = 'admin_login.html';
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar { transition: all 0.3s; }
+        .bg-navy-dark { background-color: #002b49; }
+        .bg-navy-light { background-color: #004a7c; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; height: 100%; }
+            .sidebar.active { transform: translateX(0); }
+            .sidebar.active ~ #overlay { display: block; }
+        }
+
+        .credit-card {
+            aspect-ratio: 1.586/1;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .card-chip {
+            width: 45px;
+            height: 35px;
+            background: linear-gradient(135deg, #ffd700 0%, #e6be03 50%, #b8860b 100%);
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+
+    <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black opacity-50 z-40 lg:hidden"></div>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar w-64 bg-navy-dark text-white flex-shrink-0 flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <span class="text-xl font-bold italic tracking-tighter">Capital<span class="text-red-500">Trust</span></span>
+                <p class="text-[10px] uppercase tracking-widest text-gray-400 mt-1">Management Suite</p>
+            </div>
+            <nav class="flex-grow p-4 space-y-2">
+                <a href="admin_dashboard.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-gauge w-5"></i> Dashboard
+                </a>
+                <a href="allCustomers.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> All Customers
+                </a>
+                <a href="addFunds.html" class="flex items-center gap-3 p-3 bg-navy-light rounded-lg transition">
+                    <i class="fa-solid fa-hand-holding-dollar w-5"></i> Manage Funds
+                </a>
+                <a href="applicationform.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-file-invoice-dollar w-5"></i> Pending Apps
+                </a>
+                 <a href="issueMessage.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Issue Message
+                </a>
+                 <a href="depositReview..html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Deposit Review
+                </a>
+            </nav>
+            <div class="p-4 border-t border-white/10">
+                <button onclick="logout()" class="flex items-center gap-3 p-3 w-full text-red-400 hover:bg-red-400/10 rounded-lg transition">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <div class="flex-grow flex flex-col min-w-0">
+            <header class="bg-white h-16 border-b flex items-center justify-between px-6 sticky top-0 z-30">
+                <button onclick="toggleSidebar()" class="lg:hidden text-navy-light text-xl"><i class="fa-solid fa-bars"></i></button>
+                <h1 class="font-bold text-gray-700 text-sm md:text-lg">Financial Adjustments</h1>
+                <div class="flex items-center gap-3">
+                    <span id="adminName" class="hidden md:block text-xs font-semibold text-gray-500">System Administrator</span>
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-bold text-xs">AD</div>
+                </div>
+            </header>
+
+            <main class="p-4 md:p-8 space-y-8">
+                
+                <section class="max-w-4xl mx-auto">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="fa-solid fa-scale-balanced text-navy-light"></i>
+                        <h2 class="font-bold text-gray-800">Adjust Live Balances</h2>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
+                        <form id="fundsForm" onsubmit="handleTransaction(event)" class="space-y-4 md:space-y-6">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Target Customer</label>
+                               <select id="userSelect" required onchange="syncUserSelections(this.value)" class="w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-navy-light outline-none transition text-sm">
+    <option value="">Loading customers...</option>
+</select>
+                            </div>
+
+                            <div id="balanceDisplay" class="hidden grid grid-cols-2 gap-4 p-4 bg-navy-dark rounded-lg text-white">
+                                <div>
+                                    <p class="text-[9px] uppercase opacity-60">Checking Balance</p>
+                                    <p id="checkBal" class="text-md md:text-xl font-bold">--</p>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] uppercase opacity-60">Savings Balance</p>
+                                    <p id="saveBal" class="text-md md:text-xl font-bold">--</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Transaction Type</label>
+                                    <select id="transType" class="w-full border rounded-lg p-3 bg-gray-50 font-bold text-sm">
+                                        <option value="add" class="text-green-600">Credit (Add Funds)</option>
+                                        <option value="deduct" class="text-red-600">Debit (Subtract Funds)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Target Account</label>
+                                    <select id="accountType" class="w-full border rounded-lg p-3 bg-gray-50 font-bold text-sm">
+                                        <option value="Checking">360 Checking</option>
+                                        <option value="Savings">Savings</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Amount</label>
+                                    <div class="relative">
+                                        <span id="symbolLabel" class="absolute left-3 top-3 text-gray-400 font-bold">$</span>
+                                        <input type="number" id="amount" step="0.01" required placeholder="0.00" class="w-full border rounded-lg p-3 pl-8 font-bold">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Transaction Memo</label>
+                                    <input type="text" id="memo" placeholder="e.g. Wire Transfer Inbound" class="w-full border rounded-lg p-3 text-sm">
+                                </div>
+                            </div>
+
+                            <button type="submit" id="submitBtn" class="w-full bg-navy-dark text-white py-4 rounded-xl font-bold hover:bg-navy-light shadow-md transition text-sm">
+                                Execute Financial Adjustment
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <hr class="max-w-4xl mx-auto border-gray-200">
+
+              <section class="max-w-4xl mx-auto mt-8">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-clock-rotate-left text-navy-light"></i>
+            <h2 class="font-bold text-gray-800">History Generator</h2>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="handleBulkHistory(10)" class="text-[10px] bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full font-bold transition uppercase">x10 Random</button>
+            <button onclick="handleBulkHistory(25)" class="text-[10px] bg-navy-dark text-white px-3 py-1 rounded-full font-bold transition uppercase">x25 Random</button>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 border-l-4 border-l-navy-light">
+        <form id="historyForm" onsubmit="handleHistoryGeneration(event)" class="space-y-4">
+            
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Target Customer (Required)</label>
+                <select id="histUserSelect" required onchange="syncUserSelections(this.value)" class="w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-navy-light outline-none transition text-sm">
+    <option value="">Select a customer to inject history...</option>
+</select>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-1">
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Merchant / Description</label>
+                    <div class="flex gap-1">
+                        <input type="text" id="histDesc" required placeholder="Merchant name..." class="w-full border rounded-lg p-3 text-sm">
+                        <button type="button" onclick="autoFillMerchant()" class="bg-gray-100 px-3 rounded-lg border hover:bg-gray-200 transition text-navy-light" title="Randomize Merchant">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Effective Date</label>
+                    <input type="date" id="dateStart" required class="w-full border rounded-lg p-3 text-sm">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Date Range (End)</label>
+                    <input type="date" id="dateEnd" required class="w-full border rounded-lg p-3 text-sm">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Amount</label>
+                    <input type="number" step="0.01" id="histAmount" required placeholder="0.00" class="w-full border rounded-lg p-3 text-sm font-bold">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Direction</label>
+                    <select id="histType" class="w-full border rounded-lg p-3 text-sm">
+                        <option value="debit">Debit (-)</option>
+                        <option value="credit">Credit (+)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Status</label>
+                    <select id="histStatus" class="w-full border rounded-lg p-3 text-sm">
+                        <option value="Completed">Completed</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Refunded">Refunded</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Acc</label>
+                    <select id="histAcc" class="w-full border rounded-lg p-3 text-sm font-bold">
+                        <option value="Checking">Checking</option>
+                        <option value="Savings">Savings</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" id="historyBtn" class="w-full bg-navy-dark text-white py-3 rounded-lg font-bold hover:bg-navy-light transition text-sm mt-4">
+                <i class="fa-solid fa-plus-circle mr-2"></i> Inject Transaction Record
+            </button>
+        </form>
+    </div>
+</section>
+
+                <hr class="max-w-4xl mx-auto border-gray-200">
+
+               <section class="max-w-4xl mx-auto pb-10">
+    <div class="flex items-center gap-2 mb-4">
+        <i class="fa-solid fa-credit-card text-navy-light"></i>
+        <h2 class="font-bold text-gray-800">Virtual Card Issuance</h2>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 border-l-4 border-l-red-500">
+            <p class="text-xs text-gray-500 mb-6 uppercase font-bold tracking-tight">Configuration</p>
+            
+            <form id="cardForm" onsubmit="handleCardGeneration(event)" class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Target Customer (Required)</label>
+                   <select id="cardUserSelect" required onchange="syncUserSelections(this.value)" class="w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-red-500 outline-none transition text-sm font-bold">
+    <option value="">Select customer for card issuance...</option>
+</select>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Card Network</label>
+                    <select id="cardType" onchange="updateCardPreview()" class="w-full border rounded-lg p-3 text-sm font-bold">
+                        <option value="Visa">Visa Platinum</option>
+                        <option value="Mastercard">Mastercard World Elite</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Initial PIN</label>
+                        <input type="text" id="cardPin" maxlength="4" pattern="\d{4}" required placeholder="1234" class="w-full border rounded-lg p-3 text-sm font-mono tracking-widest bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase text-blue-600">Base Currency</label>
+                        <input type="text" id="cardCurrency" readonly class="w-full border rounded-lg p-3 text-sm font-bold bg-gray-100 text-gray-500 cursor-not-allowed" placeholder="---">
+                    </div>
+                </div>
+
+                <button type="submit" id="cardBtn" class="w-full bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700 transition text-sm shadow-md">
+                    <i class="fa-solid fa-bolt mr-2"></i> Issue Virtual Card
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 flex flex-col justify-center items-center">
+            <p class="text-[10px] font-bold text-gray-400 uppercase mb-4">Real-time Preview</p>
+            <div id="visualCard" class="credit-card w-full max-w-[320px] rounded-xl p-6 text-white shadow-2xl">
+                <div class="flex justify-between items-start mb-8">
+                    <div class="card-chip"></div>
+                    <div id="previewLogo" class="text-xl"></div>
+                </div>
+                <div class="mb-6">
+                    <p class="text-[10px] opacity-60 tracking-widest uppercase">Card Number</p>
+                    <p class="text-lg font-mono tracking-[4px]">**** **** **** ****</p>
+                </div>
+                <div class="flex justify-between items-end">
+                    <div>
+                        <p class="text-[8px] opacity-60 uppercase">Card Holder</p>
+                        <p id="previewName" class="text-xs font-bold tracking-wide uppercase">Choose Customer</p>
+                    </div>
+                    <div class="text-right">
+                        <p id="previewCurrency" class="text-xs font-bold">---</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div id="customModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-sm" onclick="closeModal()"></div>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden transform transition-all scale-95 opacity-0" id="modalContainer">
+        <div id="modalHeader" class="p-6 pb-0 flex justify-between items-start">
+            <div id="modalIcon" class="w-12 h-12 rounded-full flex items-center justify-center text-2xl"></div>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-6 text-center">
+            <h3 id="modalTitle" class="text-xl font-bold text-gray-800 mb-2">Notice</h3>
+            <p id="modalMessage" class="text-gray-500 text-sm leading-relaxed"></p>
+        </div>
+        <div class="p-4 bg-gray-50 flex gap-3">
+            <button id="modalConfirmBtn" class="hidden flex-1 bg-navy-dark text-white py-3 rounded-xl font-bold text-sm">Confirm</button>
+            <button onclick="closeModal()" class="flex-1 bg-white border border-gray-200 text-gray-700 py-3 rounded-xl font-bold text-sm hover:bg-gray-100 transition">Close</button>
+        </div>
+    </div>
+</div>
+
+   <script>
+        let allCustomers = [];
+        const currencyMap = { 'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': '$', 'CAD': 'CA$', 'MXN': '$', 'PHP': '₱' };
+        
+        const realisticMemos = [
+            "Direct Deposit: PAYROLL - ADO CORP ID:99281",
+            "Direct Deposit: FED SALARY / TREAS 310",
+            "Payroll Deposit: GOOGLE LLC NET PAY",
+            "CASH APP*SENT*TRANSFER",
+            "CASH APP*ADD CASH*WEB-ID",
+            "VENMO*PAYMENT*TOP-UP",
+            "ZELLE TRANSFER FROM: MARK STEVENS",
+            "WIRE TRANSFER INBOUND: REF#882910442",
+            "Amazon.com Marketplace AMZN.COM/BILL",
+            "Starbucks Coffee #482 SEATTLE WA",
+            "Netflix.com Subscription SVR# 9921",
+            "Apple.com/Bill iCloud Monthly Storage",
+            "Uber Trip / Uber.com HELP.UBER.COM",
+            "Shell Oil Auto-Pay POS #00921",
+            "Walmart Supercenter STORE #3211",
+            "Target T-0921 POS DEBIT",
+            "DoorDash*Chipotle MEXICAN GRILL",
+            "ATM Withdrawal - 5th Ave BRANCH #102",
+            "COSTCO WHSE #1210 GAS STATION"
+        ];
+
+        // --- Initialization & Data Fetching ---
+        async function fetchUsers() {
+            try {
+                const response = await fetch('/.netlify/functions/api', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}` 
+                    },
+                    body: JSON.stringify({ action: 'get-all-customers' })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    allCustomers = data.customers;
+                    const selectIds = ['userSelect', 'histUserSelect', 'cardUserSelect'];
+                    
+                    selectIds.forEach(id => {
+                        const select = document.getElementById(id);
+                        if (select) {
+                            select.innerHTML = '<option value="">-- Choose Customer --</option>';
+                            allCustomers.forEach(u => {
+                                const option = document.createElement('option');
+                                option.value = u._id;
+                                option.textContent = `${u.firstName} ${u.lastName} [${u.email}]`;
+                                select.appendChild(option);
+                            });
+                        }
+                    });
+                }
+            } catch (err) { 
+                console.error("Error fetching users:", err); 
+            }
+        }
+
+        // --- Synchronize Dropdowns ---
+        function syncUserSelections(userId) {
+            const dropdowns = ['userSelect', 'histUserSelect', 'cardUserSelect'];
+            dropdowns.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = userId;
+            });
+            onUserChange(); 
+        }
+
+        function onUserChange() {
+            const userId = document.getElementById('userSelect').value;
+            const user = allCustomers.find(u => u._id === userId);
+            const display = document.getElementById('balanceDisplay');
+            
+            if (user) {
+                display.classList.remove('hidden');
+                const sym = currencyMap[user.currency] || '$';
+                const checkBal = user.accounts?.checking?.balance || 0;
+                const saveBal = user.accounts?.savings?.balance || 0;
+                
+                document.getElementById('checkBal').innerText = `${sym}${checkBal.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                document.getElementById('saveBal').innerText = `${sym}${saveBal.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                document.getElementById('symbolLabel').innerText = sym;
+                document.getElementById('cardCurrency').value = user.currency;
+                document.getElementById('previewName').innerText = `${user.firstName} ${user.lastName}`.toUpperCase();
+                updateCardPreview();
+            } else {
+                display.classList.add('hidden');
+                document.getElementById('previewName').innerText = "CHOOSE CUSTOMER";
+            }
+        }
+
+        // --- Balance Adjustment Logic ---
+        async function handleTransaction(e) {
+            e.preventDefault();
+            const userId = document.getElementById('userSelect').value;
+            if(!userId) return showNotice("Selection Required", "Please select a target customer first.", "warning");
+            
+            const btn = document.getElementById('submitBtn');
+            const transType = document.getElementById('transType').value;
+            let amount = parseFloat(document.getElementById('amount').value);
+            const account = document.getElementById('accountType').value;
+            const memo = document.getElementById('memo').value || "Administrative Adjustment";
+
+            if (transType === 'deduct') amount = -Math.abs(amount);
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Processing...';
+
+            try {
+                const response = await fetch('/.netlify/functions/api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}` },
+                    body: JSON.stringify({ action: 'admin-add-funds', userId, amount, accountType: account, memo: memo })
+                });
+                if (response.ok) {
+                    showNotice("Adjustment Successful", "The user balance has been updated.", "success");
+                    await fetchUsers();
+                    onUserChange();
+                    e.target.reset();
+                } else {
+                    showNotice("Action Failed", "Server rejected the update.", "error");
+                }
+            } catch (err) { 
+                showNotice("Network Error", "Could not connect to the API.", "error"); 
+            } finally { 
+                btn.disabled = false; 
+                btn.innerHTML = 'Execute Financial Adjustment'; 
+            }
+        }
+
+        // --- History Injection Logic ---
+        function autoFillMerchant() {
+            const memo = realisticMemos[Math.floor(Math.random() * realisticMemos.length)];
+            const isCredit = /Deposit|INBOUND|FROM:|CASH APP\*ADD/.test(memo);
+            
+            document.getElementById('histDesc').value = memo;
+            document.getElementById('histType').value = isCredit ? "credit" : "debit";
+            
+            const amt = isCredit ? (Math.random() * 2500 + 500) : (Math.random() * 85 + 5);
+            document.getElementById('histAmount').value = amt.toFixed(2);
+        }
+
+        async function handleHistoryGeneration(e) {
+            e.preventDefault();
+            const userId = document.getElementById('histUserSelect').value;
+            if(!userId) return showNotice("Missing Selection", "Select a customer first.", "warning");
+
+            const startStr = document.getElementById('dateStart').value;
+            const endStr = document.getElementById('dateEnd').value || startStr;
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+            const randomTime = start.getTime() + Math.random() * (end.getTime() - start.getTime());
+            
+            const payload = {
+                action: 'admin-add-history',
+                userId,
+                description: document.getElementById('histDesc').value,
+                date: new Date(randomTime),
+                amount: document.getElementById('histAmount').value,
+                type: document.getElementById('histType').value,
+                status: document.getElementById('histStatus').value,
+                accountType: document.getElementById('histAcc').value
+            };
+
+            try {
+                const res = await fetch('/.netlify/functions/api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}` },
+                    body: JSON.stringify(payload)
+                });
+                if(res.ok) { 
+                    showNotice("History Injected", "The transaction record was added successfully.", "success");
+                    e.target.reset(); 
+                }
+            } catch (err) { 
+                showNotice("Failed", "Could not inject transaction record.", "error"); 
+            }
+        }
+
+        async function handleBulkHistory(count) {
+            const userId = document.getElementById('histUserSelect').value;
+            if(!userId) return showNotice("Selection Required", "Please select a customer first.", "warning");
+            
+            const startStr = document.getElementById('dateStart').value;
+            const endStr = document.getElementById('dateEnd').value;
+            if(!startStr || !endStr) return showNotice("Missing Range", "Set a date range first to generate bulk records.", "info");
+
+            const start = new Date(startStr).getTime();
+            const end = new Date(endStr).getTime();
+            const transactions = [];
+
+            for(let i = 0; i < count; i++) {
+                const memo = realisticMemos[Math.floor(Math.random() * realisticMemos.length)];
+                const isCredit = /Deposit|INBOUND|FROM:|CASH APP\*ADD/.test(memo);
+                const randomTime = start + Math.random() * (end - start);
+                
+                transactions.push({
+                    description: memo,
+                    date: new Date(randomTime),
+                    amount: isCredit ? (Math.random() * 2000 + 400) : (Math.random() * 120 + 5),
+                    type: isCredit ? 'credit' : 'debit',
+                    status: 'Completed',
+                    accountType: 'Checking'
+                });
+            }
+
+            try {
+                const res = await fetch('/.netlify/functions/api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}` },
+                    body: JSON.stringify({ action: 'admin-bulk-history', userId, transactions })
+                });
+                if(res.ok) showNotice("Bulk Success", `${count} transactions successfully injected.`, "success");
+            } catch (e) { 
+                showNotice("Bulk Failed", "Network error during bulk injection.", "error"); 
+            }
+        }
+
+        // --- Card Management Logic ---
+        async function handleCardGeneration(e) {
+            e.preventDefault();
+            const userId = document.getElementById('cardUserSelect').value;
+            if(!userId) return showNotice("Selection Required", "Select a customer to issue a card.", "warning");
+
+            const payload = {
+                action: 'admin-generate-card',
+                userId,
+                cardType: document.getElementById('cardType').value,
+                pin: document.getElementById('cardPin').value,
+                currency: document.getElementById('cardCurrency').value
+            };
+
+            if(!confirm("Warning: This will replace any existing card. Proceed?")) return;
+
+            try {
+                const response = await fetch('/.netlify/functions/api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}` },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showNotice("Virtual Card Issued", `No: ${result.cardDetails.cardNumber}\nCVV: ${result.cardDetails.cvv}\nExp: ${result.cardDetails.expiryDate}`, "success");
+                    onUserChange();
+                }
+            } catch (err) { 
+                showNotice("Error", "Failed to issue virtual card.", "error"); 
+            }
+        }
+
+        function updateCardPreview() {
+            const type = document.getElementById('cardType').value;
+            const logoDiv = document.getElementById('previewLogo');
+            const visualCard = document.getElementById('visualCard');
+            const currencyVal = document.getElementById('cardCurrency').value;
+            
+            document.getElementById('previewCurrency').innerText = currencyVal || '---';
+
+            if (type === 'Visa') {
+                logoDiv.innerHTML = '<span class="italic font-black text-2xl tracking-tighter">VISA</span>';
+                visualCard.style.background = 'linear-gradient(135deg, #1a1f71 0%, #002b49 100%)';
+            } else {
+                logoDiv.innerHTML = `<div class="flex"><div class="w-7 h-7 bg-red-500 rounded-full opacity-90"></div><div class="w-7 h-7 bg-yellow-500 rounded-full opacity-90 -ml-4"></div></div>`;
+                visualCard.style.background = 'linear-gradient(135deg, #2d3436 0%, #000000 100%)';
+            }
+        }
+
+        // --- UI Modal & Sidebar System ---
+        function showNotice(title, message, type = 'success') {
+            const modal = document.getElementById('customModal');
+            const container = document.getElementById('modalContainer');
+            const icon = document.getElementById('modalIcon');
+            const titleEl = document.getElementById('modalTitle');
+            const msgEl = document.getElementById('modalMessage');
+
+            const types = {
+                success: { bg: 'bg-green-100', text: 'text-green-600', fa: 'fa-circle-check' },
+                error: { bg: 'bg-red-100', text: 'text-red-600', fa: 'fa-circle-exclamation' },
+                warning: { bg: 'bg-yellow-100', text: 'text-yellow-600', fa: 'fa-triangle-exclamation' },
+                info: { bg: 'bg-blue-100', text: 'text-blue-600', fa: 'fa-circle-info' }
+            };
+
+            const config = types[type] || types.info;
+            icon.className = `w-12 h-12 rounded-full flex items-center justify-center text-2xl ${config.bg} ${config.text}`;
+            icon.innerHTML = `<i class="fa-solid ${config.fa}"></i>`;
+            titleEl.innerText = title;
+            msgEl.innerText = message;
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                container.classList.remove('scale-95', 'opacity-0');
+                container.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const container = document.getElementById('modalContainer');
+            container.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('customModal').classList.add('hidden');
+            }, 200);
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('hidden');
+        }
+
+        function logout() { 
+            sessionStorage.clear(); 
+            window.location.href = 'admin_login.html'; 
+        }
+
+        window.onload = fetchUsers;
+    </script>
+</body>
+</body>
+</html>

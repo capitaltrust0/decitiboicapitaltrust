@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Directory - Capital Trust</title>
+    <script>
+        if (!sessionStorage.getItem('adminToken')) window.location.href = 'admin_login.html';
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar { transition: all 0.3s; }
+        .bg-navy-dark { background-color: #002b49; }
+        .bg-navy-light { background-color: #004a7c; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; height: 100%; }
+            .sidebar.active { transform: translateX(0); }
+        }
+        .edit-row { background-color: #f8fafc; border-left: 4px solid #004a7c; }
+        input, select { font-size: 0.875rem !important; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+
+    <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black opacity-50 z-40 lg:hidden"></div>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar w-64 bg-navy-dark text-white flex-shrink-0 flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <span class="text-xl font-bold italic tracking-tighter">Capital<span class="text-red-500">Trust</span></span>
+                <p class="text-[10px] uppercase tracking-widest text-gray-400 mt-1">Management Suite</p>
+            </div>
+            <nav class="flex-grow p-4 space-y-2">
+                <a href="admin_dashboard.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-gauge w-5"></i> Dashboard
+                </a>
+                <a href="allCustomers.html" class="flex items-center gap-3 p-3 bg-navy-light rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> All Customers
+                </a>
+                <a href="applicationform.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-file-invoice-dollar w-5"></i> Pending Apps
+                </a>
+                 <a href="addsFund.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-hand-holding-dollar w-5"></i> Add Funds
+                </a>
+                 <a href="issueMessage.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Issue Message
+                </a>
+                  <a href="transferUpdate.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Transfer Update
+                </a>
+                 <a href="depositReview.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Deposit Review
+                </a>
+                 <a href="emailSender.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Email Sender
+                </a>
+                <a href="chat-support.html" class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition">
+                    <i class="fa-solid fa-users w-5"></i> Chat Supports
+                </a>
+            </nav>
+            <div class="p-4 border-t border-white/10">
+                <button onclick="logout()" class="flex items-center gap-3 p-3 w-full text-red-400 hover:bg-red-400/10 rounded-lg transition">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <div class="flex-grow flex flex-col min-w-0">
+            <header class="bg-white h-16 border-b flex items-center justify-between px-6 sticky top-0 z-30">
+                <button onclick="toggleSidebar()" class="lg:hidden text-navy-light text-xl"><i class="fa-solid fa-bars"></i></button>
+                <h1 class="font-bold text-gray-700 text-lg">Customer Master List</h1>
+                <div class="flex items-center gap-4">
+                    <input type="text" id="searchInput" onkeyup="filterCustomers()" placeholder="Search by name, email or city..." class="hidden md:block border border-gray-300 rounded-lg px-4 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-72">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-bold">A</div>
+                </div>
+            </header>
+
+            <main class="p-4 md:p-8">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50 text-gray-500 text-[10px] uppercase font-bold border-b">
+                                <tr>
+                                    <th class="px-6 py-4">Full Profile</th>
+                                    <th class="px-6 py-4">Account Metrics</th>
+                                    <th class="px-6 py-4">Location/Details</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customerTableBody" class="divide-y text-sm text-gray-700">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+   <script>
+    let allCustomers = [];
+    const currencyMap = { 'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': '$', 'CAD': 'CA$', 'MXN': '$', 'PHP': '₱' };
+    
+   const regionalLabelMap = {
+    'USD': 'Routing Number',
+    'GBP': 'Sort Code',
+    'EUR': 'IBAN Number',
+    'AUD': 'BSB Number',
+    'MXN': 'CLABE',
+    'PHP': 'BRSTN / Account No',
+    'CAD': 'Transit/Inst No'
+};
+
+    async function fetchCustomers() {
+        const tableBody = document.getElementById('customerTableBody');
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="p-10 text-center text-gray-400">
+                    <i class="fa-solid fa-spinner fa-spin mr-2"></i> Syncing Database...
+                </td>
+            </tr>`;
+        
+        try {
+            const token = sessionStorage.getItem('adminToken');
+            if (!token) {
+                window.location.href = 'admin_login.html';
+                return;
+            }
+
+            const response = await fetch('/.netlify/functions/api', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ action: 'get-all-customers' })
+            });
+            
+            const data = await response.json();
+            if (response.ok) {
+                allCustomers = data.customers || [];
+                renderTable(allCustomers);
+            } else {
+                throw new Error(data.message || "Failed to load");
+            }
+        } catch (err) {
+            console.error("Fetch Error:", err);
+            tableBody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-500">Connection Failed: ${err.message}</td></tr>`;
+        }
+    }
+
+    function renderTable(customers) {
+        const tableBody = document.getElementById('customerTableBody');
+        tableBody.innerHTML = '';
+
+        if (customers.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-gray-400">No customers found.</td></tr>';
+            return;
+        }
+
+        customers.forEach(user => {
+            const name = `${user.firstName} ${user.lastName}`;
+            const symbol = currencyMap[user.currency] || '$';
+            const localLabel = regionalLabelMap[user.currency] || 'Routing/Local Code';
+            
+            const checkingBal = user.accounts?.checking?.balance || 0;
+            const savingsBal = user.accounts?.savings?.balance || 0;
+            const checkingAcc = user.accounts?.checking?.accountNumber || 'NOT SET';
+            const savingsAcc = user.accounts?.savings?.accountNumber || 'NOT SET';
+
+            const avatar = (user.profilePicUrl && user.profilePicUrl !== "") 
+                ? user.profilePicUrl 
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=002b49&color=fff`;
+            
+            tableBody.innerHTML += `
+                <tr id="row-${user._id}" class="hover:bg-gray-50 transition border-b">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <img src="${avatar}" class="w-12 h-12 rounded-full object-cover border shadow-sm">
+                            <div>
+                                <div class="font-bold text-navy-dark leading-tight">${name}</div>
+                                <div class="text-[11px] text-gray-500 font-medium">${user.email}</div>
+                                <div class="text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-tighter">ID: ${user._id}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="mb-2">
+                            <p class="text-[9px] uppercase font-black text-gray-400">Checking (${checkingAcc})</p>
+                            <p class="font-bold text-navy-dark">${symbol}${checkingBal.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] uppercase font-black text-gray-400">Savings (${savingsAcc})</p>
+                            <p class="font-bold text-green-700">${symbol}${savingsBal.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-[12px] font-medium text-gray-600">${user.address?.city || 'N/A'}, ${user.address?.state || ''}</div>
+                        <div class="text-[11px] text-gray-400">${user.phone || 'No phone'}</div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="px-3 py-1 rounded-full text-[10px] font-bold ${user.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'} uppercase">
+                            ${user.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="toggleInlineEdit('${user._id}')" class="bg-navy-dark text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-navy-light transition shadow-sm">
+                            <i class="fa-solid fa-user-gear mr-1"></i> Manage
+                        </button>
+                    </td>
+                </tr>
+                
+                <tr id="edit-row-${user._id}" class="hidden edit-row bg-slate-50">
+                    <td colspan="5" class="px-8 py-6">
+                        <form onsubmit="handleInlineSubmit(event, '${user._id}')" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                
+                                <div class="space-y-3">
+                                    <h4 class="text-xs font-black text-navy-light uppercase tracking-widest border-b pb-1">Primary Profile</h4>
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <img id="preview-${user._id}" src="${avatar}" class="w-10 h-10 rounded-full border bg-white">
+                                        <input type="text" name="profilePicUrl" value="${user.profilePicUrl || ''}" 
+                                            oninput="document.getElementById('preview-${user._id}').src = this.value"
+                                            placeholder="Profile Image URL" class="text-[10px] w-full border rounded p-1">
+                                    </div>
+                                    <input type="text" name="firstName" value="${user.firstName}" placeholder="First Name" class="w-full border rounded p-2 text-sm" required>
+                                    <input type="text" name="lastName" value="${user.lastName}" placeholder="Last Name" class="w-full border rounded p-2 text-sm" required>
+                                    <input type="email" name="email" value="${user.email}" placeholder="Email Address" class="w-full border rounded p-2 text-sm" required>
+                                    <input type="text" name="phone" value="${user.phone || ''}" placeholder="Phone Number" class="w-full border rounded p-2 text-sm">
+                                    <input type="date" name="dob" value="${user.dob || ''}" class="w-full border rounded p-2 text-sm">
+                                </div>
+
+                                <div class="space-y-3">
+                                    <h4 class="text-xs font-black text-red-600 uppercase tracking-widest border-b pb-1">Account Access</h4>
+                                    <select name="status" class="w-full border rounded p-2 bg-white font-bold text-sm">
+                                        <option value="Active" ${user.status === 'Active' ? 'selected' : ''}>Active</option>
+                                        <option value="Pending Approval" ${user.status === 'Pending Approval' ? 'selected' : ''}>Pending Approval</option>
+                                        <option value="Suspended" ${user.status === 'Suspended' ? 'selected' : ''}>Suspended</option>
+                                    </select>
+                                    
+                                   <div class="bg-white p-2 rounded border border-gray-200 space-y-2 shadow-sm">
+                                        <div class="flex justify-between items-center">
+                                            <label id="label-local-${user._id}" class="text-[9px] font-bold text-blue-600 block uppercase tracking-tighter">
+                                                ${localLabel}
+                                            </label>
+                                            <button type="button" onclick="generateRoutingNumber('${user._id}')" class="text-[9px] text-blue-600 font-bold hover:underline">
+                                                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generate
+                                            </button>
+                                        </div>
+                                        <input type="text" name="routingNumber" id="routing-${user._id}" value="${user.routingNumber || ''}" placeholder="Local Routing Code" class="w-full border rounded p-2 font-mono text-xs">
+                                        
+                                        <div class="flex justify-between items-center mt-2">
+                                            <label class="text-[9px] font-bold text-gray-400 block uppercase tracking-tighter">International SWIFT/BIC</label>
+                                            <button type="button" onclick="generateSwiftCode('${user._id}')" class="text-[9px] text-purple-600 font-bold hover:underline">
+                                                <i class="fa-solid fa-earth-americas mr-1"></i> Generate
+                                            </button>
+                                        </div>
+                                        <input type="text" name="swiftCode" id="swift-${user._id}" value="${user.swiftCode || ''}" placeholder="SWIFT CODE" class="w-full border rounded p-2 font-mono text-xs uppercase">
+                                    </div>
+
+                                    <label class="text-[9px] font-bold text-gray-400 block mb-[-8px]">CHECKING BALANCE</label>
+                                    <input type="number" step="0.01" name="checkingBalance" value="${checkingBal}" class="w-full border rounded p-2 font-bold text-sm">
+                                    
+                                    <label class="text-[9px] font-bold text-gray-400 block mb-[-8px]">SAVINGS BALANCE</label>
+                                    <input type="number" step="0.01" name="savingsBalance" value="${savingsBal}" class="w-full border rounded p-2 font-bold text-green-700 text-sm">
+                                    
+                                    <input type="hidden" name="checkingAccNo" id="acc-check-${user._id}" value="${checkingAcc}">
+                                    <input type="hidden" name="savingsAccNo" id="acc-save-${user._id}" value="${savingsAcc}">
+                                    <button type="button" onclick="generateAccountNumbers('${user._id}')" class="text-[10px] text-blue-600 font-bold hover:underline">
+                                        <i class="fa-solid fa-rotate mr-1"></i> Re-generate Acc Numbers
+                                    </button>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <h4 class="text-xs font-black text-navy-light uppercase tracking-widest border-b pb-1">Detailed Info</h4>
+                                    <input type="text" name="street" value="${user.address?.street || ''}" placeholder="Street Address" class="w-full border rounded p-2 text-sm">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="text" name="city" value="${user.address?.city || ''}" placeholder="City" class="w-full border rounded p-2 text-sm">
+                                        <input type="text" name="state" value="${user.address?.state || ''}" placeholder="State" class="w-full border rounded p-2 text-sm">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="text" name="zip" value="${user.address?.zip || ''}" placeholder="Zip" class="w-full border rounded p-2 text-sm">
+                                        <input type="text" name="country" value="${user.address?.country || ''}" placeholder="Country" class="w-full border rounded p-2 text-sm">
+                                    </div>
+                                   <div class="pt-2 border-t">
+    <label class="text-[9px] font-bold text-gray-400 block mb-1 uppercase">Occupation / Employment</label>
+    <input type="text" 
+           name="empStatus" 
+           value="${user.employment?.status || ''}" 
+           placeholder="e.g. Senior Software Engineer" 
+           class="w-full border rounded p-2 text-sm">
+    
+    <label class="text-[9px] font-bold text-gray-400 block mb-[-8px] mt-2">ANNUAL INCOME</label>
+    <input type="number" 
+           name="income" 
+           value="${user.employment?.income || ''}" 
+           placeholder="Annual Income" 
+           class="w-full border rounded p-2 mt-2 text-sm font-bold">
+</div>
+                                </div>
+                                <div class="space-y-3">
+    <h4 class="text-xs font-black text-navy-light uppercase tracking-widest border-b pb-1">Detailed Info</h4>
+    
+    <label class="text-[9px] font-bold text-gray-400 block mb-[-8px]">GENDER</label>
+    <select name="gender" class="w-full border rounded p-2 bg-white text-sm">
+        <option value="" disabled ${!user.gender ? 'selected' : ''}>Select Gender</option>
+        <option value="Male" ${user.gender === 'Male' ? 'selected' : ''}>Male</option>
+        <option value="Female" ${user.gender === 'Female' ? 'selected' : ''}>Female</option>
+        <option value="Other" ${user.gender === 'Other' ? 'selected' : ''}>Other</option>
+    </select>
+    
+   <h4 class="text-xs font-black text-amber-600 uppercase tracking-widest border-b pb-1 mt-4">Security & Access</h4>
+<div class="grid grid-cols-1 gap-2">
+    <div>
+        <label class="text-[9px] font-bold text-gray-400 block uppercase">Account Password</label>
+        <div class="relative">
+            <input type="text" name="password" id="pass-${user._id}" value="${user.password || ''}" 
+                   placeholder="Enter new password" 
+                   class="w-full border rounded p-2 text-sm font-mono bg-amber-50 pr-10">
+            <button type="button" onclick="generatePassword('${user._id}')" 
+                    class="absolute right-2 top-2 text-amber-600 hover:text-amber-800">
+                <i class="fa-solid fa-key text-xs"></i>
+            </button>
+        </div>
+    </div>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-2">
+    <div>
+        <label class="text-[9px] font-bold text-gray-400 block uppercase">Login PIN</label>
+        <input type="text" name="loginPin" value="${user.loginPin || ''}" maxlength="6" class="w-full border rounded p-2 text-sm font-mono bg-amber-50">
+    </div>
+    <div>
+        <label class="text-[9px] font-bold text-gray-400 block uppercase">Transfer PIN</label>
+        <input type="text" name="transferPin" value="${user.transferPin || ''}" maxlength="4" class="w-full border rounded p-2 text-sm font-mono bg-amber-50">
+    </div>
+</div>
+
+
+                                <div class="space-y-3 flex flex-col justify-end">
+                                    <label class="text-[9px] font-bold text-gray-400 block mb-[-8px]">BASE CURRENCY</label>
+                                    <select name="currency" onchange="updateLocalLabel(this, '${user._id}')" class="w-full border rounded p-2 bg-gray-100 font-bold text-navy-dark text-sm">
+                                        ${Object.keys(currencyMap).map(curr => `<option value="${curr}" ${user.currency === curr ? 'selected' : ''}>${curr} (${currencyMap[curr]})</option>`).join('')}
+                                    </select>
+                                    <button type="submit" class="w-full py-3 bg-navy-dark text-white rounded-lg font-bold hover:bg-navy-light shadow-md transition">
+                                        Save All Changes
+                                    </button>
+                                    <button type="button" onclick="toggleInlineEdit('${user._id}')" class="w-full py-2 border border-gray-300 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100 transition">
+                                        Cancel
+                                    </button>
+                                    <button type="button" onclick="confirmDelete('${user._id}', '${name}')" class="w-full py-2 text-red-600 text-[10px] font-bold hover:bg-red-50 rounded-lg transition">
+                                        PURGE USER DATA
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function generateSwiftCode(userId) {
+        const row = document.getElementById(`edit-row-${userId}`);
+        const currency = row.querySelector('select[name="currency"]').value;
+        const swiftInput = document.getElementById(`swift-${userId}`);
+        
+        const L = (n) => Array.from({length: n}, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join('');
+        
+        let generatedSwift = "";
+        switch(currency) {
+            case 'USD': generatedSwift = `${L(4)}US33898`; break;
+            case 'GBP': generatedSwift = `${L(4)}GB2L323`; break;
+            case 'EUR': generatedSwift = `${L(4)}FRPP909`; break;
+            case 'AUD': generatedSwift = `${L(4)}AU2S732`; break;
+            case 'CAD': generatedSwift = `${L(4)}CATT233`; break;
+            case 'MXN': generatedSwift = `${L(4)}MXMM099`; break;
+            case 'PHP': generatedSwift = `${L(4)}PHMM032`; break;
+            default:    generatedSwift = `${L(4)}${L(2)}${L(2)}783`;
+        }
+
+        swiftInput.value = generatedSwift;
+        swiftInput.classList.add('bg-purple-50', 'border-purple-400');
+        setTimeout(() => {
+            swiftInput.classList.remove('bg-purple-50', 'border-purple-400');
+        }, 800);
+    }
+
+   // 2. The Logic to update the label when you change the dropdown
+function updateLocalLabel(select, userId) {
+    const label = document.getElementById(`label-local-${userId}`);
+    const selectedCurrency = select.value;
+    if (label) {
+        label.innerText = regionalLabelMap[selectedCurrency] || 'Local Code';
+    }
+}
+
+    function generateAccountNumbers(userId) {
+        const check = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+        const save = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+        
+        document.getElementById(`acc-check-${userId}`).value = check;
+        document.getElementById(`acc-save-${userId}`).value = save;
+        
+        const btn = event.currentTarget;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Generated!';
+        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+    }
+    
+    function toggleInlineEdit(userId) {
+        const editRow = document.getElementById(`edit-row-${userId}`);
+        const mainRow = document.getElementById(`row-${userId}`);
+        document.querySelectorAll('.edit-row').forEach(row => {
+            if(row.id !== `edit-row-${userId}`) row.classList.add('hidden');
+        });
+        editRow.classList.toggle('hidden');
+        mainRow.classList.toggle('bg-gray-100');
+    }
+
+    async function handleInlineSubmit(event, userId) {
+        event.preventDefault();
+        const form = event.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fa-solid fa-sync fa-spin"></i> Saving...';
+
+        const formData = new FormData(form);
+        const updateData = {
+        firstName: formData.get('firstName'),
+        lastName: formData.get('lastName'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+        phone: formData.get('phone'),
+        dob: formData.get('dob'),
+        gender: formData.get('gender'), // Added Gender
+        loginPin: formData.get('loginPin'), // Added Login PIN
+        transferPin: formData.get('transferPin'), // Added Transfer PIN
+        profilePicUrl: formData.get('profilePicUrl'),
+        currency: formData.get('currency'),
+        status: formData.get('status'),
+        routingNumber: formData.get('routingNumber'),
+        swiftCode: formData.get('swiftCode'),
+            accounts: {
+                checking: {
+                    accountName: '360 Checking',
+                    accountNumber: formData.get('checkingAccNo'),
+                    balance: parseFloat(formData.get('checkingBalance')) || 0
+                },
+                savings: {
+                    accountName: '360 Savings',
+                    accountNumber: formData.get('savingsAccNo'),
+                    balance: parseFloat(formData.get('savingsBalance')) || 0
+                }
+            },
+            address: {
+                street: formData.get('street'),
+                city: formData.get('city'),
+                state: formData.get('state'),
+                zip: formData.get('zip'),
+                country: formData.get('country')
+            },
+            employment: {
+                status: formData.get('empStatus'),
+                income: formData.get('income')
+            }
+        };
+
+        try {
+            const response = await fetch('/.netlify/functions/api', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}` 
+                },
+                body: JSON.stringify({ action: 'admin-update-user', userId, updateData })
+            });
+
+            if (response.ok) {
+                toggleInlineEdit(userId); 
+                await fetchCustomers();
+            } else {
+                const errData = await response.json();
+                alert("Update failed: " + (errData.message || "Unknown error"));
+            }
+        } catch (err) {
+            alert("Connection error occurred.");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
+    }
+
+    async function confirmDelete(userId, name) {
+        if (confirm(`CRITICAL: Are you sure you want to permanently delete ${name}? This action cannot be undone.`)) {
+            try {
+                const response = await fetch('/.netlify/functions/api', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}` 
+                    },
+                    body: JSON.stringify({ action: 'admin-delete-user', userId })
+                });
+                if (response.ok) {
+                    alert("User successfully purged.");
+                    await fetchCustomers();
+                } else {
+                    alert("Unauthorized or server error.");
+                }
+            } catch (err) { alert("Delete failed."); }
+        }
+    }
+
+    function filterCustomers() {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = allCustomers.filter(c => 
+            `${c.firstName} ${c.lastName}`.toLowerCase().includes(term) || 
+            c.email.toLowerCase().includes(term) ||
+            (c.address?.city && c.address.city.toLowerCase().includes(term))
+        );
+        renderTable(filtered);
+    }
+
+   // 3. The Generator Logic for Country-Specific Formats
+function generateRoutingNumber(userId) {
+    const row = document.getElementById(`edit-row-${userId}`);
+    // Get the current selected currency from the dropdown
+    const currency = row.querySelector('select[name="currency"]').value;
+    const routingInput = document.getElementById(`routing-${userId}`);
+    let generatedCode = "";
+    
+    // Helper to generate random numbers
+    const rand = (n) => Math.floor(Math.pow(10, n-1) + Math.random() * (Math.pow(10, n) - Math.pow(10, n-1) - 1));
+
+    switch(currency) {
+        case 'USD': 
+            generatedCode = rand(9).toString(); // 9-digit Routing
+            break;
+        case 'GBP': 
+            generatedCode = `${rand(2)}-${rand(2)}-${rand(2)}`; // Sort Code format: 00-00-00
+            break;
+        case 'EUR': 
+            generatedCode = "FR76" + rand(14).toString(); // Sample IBAN format
+            break;
+        case 'AUD': 
+            generatedCode = `${rand(3)}-${rand(3)}`; // BSB Format: 000-000
+            break;
+        case 'CAD': 
+            generatedCode = `${rand(5)}-${rand(3)}`; // Transit (5) - Inst (3)
+            break;
+        case 'MXN': 
+            generatedCode = rand(18).toString(); // 18-digit CLABE
+            break;
+        case 'PHP': 
+            generatedCode = "0" + rand(10).toString(); // 11-digit BRSTN/Account
+            break;
+        default: 
+            generatedCode = rand(10).toString();
+    }
+
+    routingInput.value = generatedCode;
+    
+    // Visual feedback
+    routingInput.classList.add('bg-blue-50', 'border-blue-400');
+    setTimeout(() => { routingInput.classList.remove('bg-blue-50', 'border-blue-400'); }, 800);
+}
+
+function generatePassword(userId) {
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let retVal = "";
+    for (let i = 0; i < 12; ++i) {
+        retVal += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    const passInput = document.getElementById(`pass-${userId}`);
+    passInput.value = retVal;
+    
+    // Visual feedback
+    passInput.classList.add('ring-2', 'ring-amber-400');
+    setTimeout(() => passInput.classList.remove('ring-2', 'ring-amber-400'), 1000);
+}
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        if (sidebar) sidebar.classList.toggle('active');
+        if (overlay) overlay.classList.toggle('hidden');
+    }
+
+    function logout() { 
+        sessionStorage.clear(); 
+        window.location.href = 'admin_login.html'; 
+    }
+
+    window.onload = fetchCustomers;
+</script>
+</body>
+</html>

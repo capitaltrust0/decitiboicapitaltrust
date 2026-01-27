@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Cards - Capital Trusts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar { transition: all 0.3s ease; }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; }
+            .sidebar.active { transform: translateX(0); }
+        }
+        .bg-navy-sidebar { background-color: #004a7c; }
+        .bg-navy-dark { background-color: #002b49; }
+        .card-shadow { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+
+        .card-wrapper {
+            perspective: 1000px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .credit-card {
+            width: 100%;
+            max-width: 380px;
+            aspect-ratio: 1.58 / 1;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .credit-card.flipped .card-inner { transform: rotateY(180deg); }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: clamp(10px, 3vw, 15px);
+            padding: clamp(15px, 5vw, 24px);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #004a7c 0%, #002b49 100%);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .card-back { transform: rotateY(180deg); background: #001a2c; }
+
+        .card-number {
+            font-size: clamp(1.1rem, 5vw, 1.5rem);
+            letter-spacing: 2px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .card-label { font-size: clamp(7px, 2vw, 9px); opacity: 0.7; text-transform: uppercase; }
+        .card-value { font-size: clamp(10px, 3vw, 13px); font-weight: 700; letter-spacing: 1px; }
+
+        .magnetic-strip { 
+            background: #000; 
+            height: clamp(30px, 10vw, 45px); 
+            width: 100%; 
+            position: absolute; 
+            left: 0; 
+            top: clamp(15px, 5vw, 25px); 
+        }
+
+        #card-container { min-height: 180px; }
+    </style>
+</head>
+<body class="bg-[#f4f7f9] font-sans antialiased text-slate-800 text-[13px] md:text-sm">
+
+    <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar w-60 bg-navy-sidebar text-white flex flex-col flex-shrink-0 min-h-screen">
+            <div class="p-5">
+                <span class="text-lg font-bold italic tracking-tighter text-white">Capital<span class="text-red-500">Trusts</span></span>
+            </div>
+            <nav class="flex-grow px-3 space-y-1">
+                <a href="user_dashboard.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs">
+                    <i class="fa-solid fa-wallet text-xs text-blue-300"></i> My Accounts
+                </a>
+                <div class="bg-navy-dark rounded-md p-2.5 mb-4 flex items-center gap-3 cursor-default">
+                    <i class="fa-solid fa-credit-card w-4 text-blue-300"></i>
+                    <span class="text-xs font-semibold text-blue-100">Credit Cards</span>
+                </div>
+                <a href="user_profile.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs border-t border-white/5 pt-4 mt-4">
+                    <i class="fa-solid fa-user w-4 text-blue-300"></i> User Profile
+                </a>
+                   <a href="transfer.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs">
+                    <i class="fa-solid fa-paper-plane w-4 text-blue-300"></i> Transfer
+                </a>
+                <button onclick="logout()" class="w-full flex items-center gap-3 p-2.5 hover:bg-red-500/20 rounded-md transition text-xs mt-auto text-red-300">
+                    <i class="fa-solid fa-right-from-bracket w-4"></i> Sign Out
+                </button>
+            </nav>
+        </aside>
+
+        <main class="flex-grow flex flex-col min-w-0">
+            <header class="bg-white h-14 flex items-center px-4 md:px-6 border-b justify-between">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="lg:hidden text-navy-dark text-lg mr-1"><i class="fa-solid fa-bars"></i></button>
+                    <a href="user_profile.html" class="flex items-center gap-2 p-1 hover:bg-slate-50 rounded-full transition-all">
+                        <div id="user-avatar-container" class="w-8 h-8 rounded-full bg-navy-dark text-white flex items-center justify-center font-bold text-[10px] shadow-sm overflow-hidden">
+                            <span id="user-initials">??</span>
+                        </div>
+                        <span class="hidden xs:inline text-xs font-bold text-slate-600">Account</span>
+                    </a>
+                </div>
+                <button class="text-slate-400 hover:text-navy-dark transition p-2"><i class="fa-regular fa-bell text-lg"></i></button>
+            </header>
+
+            <div class="p-4 md:p-8 max-w-6xl mx-auto w-full space-y-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h1 class="text-xl font-bold text-navy-dark leading-tight">Digital Wallet</h1>
+                        <p class="text-slate-500 text-[11px] md:text-xs">Secure access to your virtual cards.</p>
+                    </div>
+                    <div id="card-status-badge" class="hidden px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                        ---
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-7 space-y-4">
+                        <div class="card-wrapper">
+                            <div id="card-container" class="credit-card" onclick="this.classList.toggle('flipped')">
+                                <div class="card-inner">
+                                    <div class="card-front">
+                                        <div class="flex justify-between items-start">
+                                            <i class="fa-solid fa-microchip text-2xl md:text-3xl text-yellow-500"></i>
+                                            <span class="italic font-black text-sm md:text-lg italic tracking-tighter">VISA</span>
+                                        </div>
+                                        <div id="display-number" class="card-number font-mono text-center my-2">**** **** **** ****</div>
+                                        <div class="flex justify-between items-end">
+                                            <div class="min-w-0">
+                                                <p class="card-label">Card Holder</p>
+                                                <p id="display-name" class="card-value truncate uppercase">---</p>
+                                            </div>
+                                            <div class="text-right flex-shrink-0">
+                                                <p class="card-label">Expires</p>
+                                                <p id="display-expiry" class="card-value">--/--</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-back">
+                                        <div class="magnetic-strip"></div>
+                                        <div class="mt-14 md:mt-16 bg-white h-7 md:h-9 w-[85%] text-black flex items-center justify-end px-3 rounded-sm">
+                                            <span id="display-cvv" class="font-mono italic font-bold text-xs md:text-sm">***</span>
+                                        </div>
+                                        <p class="text-[6px] md:text-[8px] leading-tight opacity-40 px-2 mt-2">
+                                            This card is electronic and encrypted. Usage is subject to Capital Trust's terms of service. Unauthorized use is a federal offense.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-center text-slate-400 text-[10px] font-medium"><i class="fa-solid fa-arrows-rotate mr-1"></i> Tap the card to view CVV</p>
+                    </div>
+
+                    <div class="lg:col-span-5 space-y-6">
+                        <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-100 card-shadow">
+                            <div id="pin-prompt">
+                                <h3 class="font-bold text-navy-dark flex items-center gap-2">
+                                    <i class="fa-solid fa-shield-halved text-blue-600"></i> 
+                                    Security Verification
+                                </h3>
+                                <p class="text-slate-500 text-[11px] mt-1 mb-4">Confirm your 4-digit PIN to reveal sensitive data.</p>
+                                
+                                <div class="flex flex-wrap gap-3">
+                                    <input type="password" id="card-pin" pattern="\d*" inputmode="numeric" maxlength="4" placeholder="****" 
+                                        class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 w-28 text-center font-bold tracking-[6px] focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                                    <button onclick="revealCardDetails()" 
+                                        class="flex-grow md:flex-none bg-navy-sidebar text-white px-8 py-3 rounded-xl font-bold hover:bg-navy-dark transition active:scale-95 text-xs">
+                                        Reveal Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-100 card-shadow overflow-hidden">
+                            <div class="p-4 border-b border-slate-50 bg-slate-50/50">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Card Settings</span>
+                            </div>
+                            <div class="divide-y divide-slate-50">
+                                <div class="p-4 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xs"><i class="fa-solid fa-snowflake"></i></div>
+                                        <div>
+                                            <p class="font-bold text-xs">Freeze Card</p>
+                                            <p id="freeze-status-text" class="text-[10px] text-slate-400">Instantly block transactions</p>
+                                        </div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="freeze-toggle" class="sr-only peer">
+                                        <div class="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const token = sessionStorage.getItem('userToken');
+        if (!token) {
+            window.location.href = '/index.html';
+        }
+
+        let fullCardNumber = "";
+        let cvv = "";
+        let expiry = "";
+
+        async function loadCardPage() {
+            try {
+                const response = await fetch('/.netlify/functions/api', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ action: 'get-user-profile' })
+                });
+
+                if (!response.ok) throw new Error('Session Expired');
+
+                const userData = await response.json();
+                
+                // 1. Set User Profile Info
+                const fName = userData.firstName || "User";
+                const lName = userData.lastName || "";
+                document.getElementById('user-initials').innerText = (fName[0] + (lName[0] || "")).toUpperCase();
+                document.getElementById('display-name').innerText = `${fName} ${lName}`;
+                
+                // 2. Mapping from the 'card' object
+                if (userData.card && userData.card.number) {
+                    fullCardNumber = String(userData.card.number);
+                    cvv = userData.card.cvv || "***";
+                    expiry = userData.card.expiry || "--/--";
+                    
+                    const last4 = fullCardNumber.slice(-4);
+                    document.getElementById('display-number').innerText = `**** **** **** ${last4}`;
+
+                    // Update Status Badge
+                    updateStatusUI(userData.card.status);
+                } else {
+                    document.getElementById('display-number').innerText = "Card Not Found";
+                }
+
+            } catch (err) {
+                console.error("Load Error:", err);
+            }
+        }
+
+        function updateStatusUI(status) {
+            const badge = document.getElementById('card-status-badge');
+            const toggle = document.getElementById('freeze-toggle');
+            const statusText = document.getElementById('freeze-status-text');
+            
+            badge.classList.remove('hidden');
+            
+            if (status === "Active") {
+                badge.innerText = "Active";
+                badge.className = "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-700";
+                toggle.checked = false;
+                statusText.innerText = "Card is active and ready for use";
+            } else {
+                badge.innerText = "Frozen";
+                badge.className = "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700";
+                toggle.checked = true;
+                statusText.innerText = "Card is temporarily blocked";
+            }
+        }
+
+        async function revealCardDetails() {
+            const pinInput = document.getElementById('card-pin').value;
+            if (pinInput.length !== 4) return alert("Please enter your 4-digit PIN.");
+
+            try {
+                const response = await fetch('/.netlify/functions/api', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ action: 'verify-pin', pin: pinInput })
+                });
+
+                if (response.ok) {
+                    if (fullCardNumber) {
+                        const formatted = fullCardNumber.replace(/(.{4})/g, '$1 ').trim();
+                        document.getElementById('display-number').innerText = formatted;
+                        document.getElementById('display-expiry').innerText = expiry;
+                        document.getElementById('display-cvv').innerText = cvv;
+                        
+                        document.getElementById('pin-prompt').innerHTML = `
+                            <div class="flex flex-col gap-3">
+                                <div class="flex items-center gap-2 text-green-600 font-bold text-[11px] p-3 bg-green-50 rounded-xl border border-green-100">
+                                    <i class="fa-solid fa-circle-check"></i> Security Cleared
+                                </div>
+                                <button onclick="copyCardNumber()" class="text-blue-600 text-xs font-bold hover:underline flex items-center gap-2">
+                                    <i class="fa-solid fa-copy"></i> Copy Card Number
+                                </button>
+                            </div>
+                        `;
+                    }
+                } else {
+                    alert("Incorrect Security PIN.");
+                }
+            } catch (e) {
+                alert("Connection error.");
+            }
+        }
+
+        function copyCardNumber() {
+            navigator.clipboard.writeText(fullCardNumber.replace(/\s/g, ''));
+            alert("Card number copied to clipboard!");
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('hidden');
+        }
+
+        function logout() { 
+            sessionStorage.clear(); 
+            window.location.href = '/index.html'; 
+        }
+
+        window.onload = loadCardPage;
+    </script>
+</body>
+</html>
