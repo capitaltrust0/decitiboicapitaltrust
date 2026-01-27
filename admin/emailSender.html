@@ -115,6 +115,22 @@
 <script>
     let userData = [];
 
+    // --- Missing function to handle dropdown changes ---
+function autoFillRecipient() {
+    const dropdown = document.getElementById('userDropdown');
+    const subjectInput = document.getElementById('subject');
+    const messageInput = document.getElementById('message');
+
+    if (dropdown.value === "") {
+        // Clear the form if no user is selected
+        subjectInput.value = "";
+        messageInput.value = "";
+    } else {
+        // Automatically load the template when a user is picked
+        loadApprovalTemplate();
+    }
+}
+
    async function loadUsers() {
     const dropdown = document.getElementById('userDropdown');
     try {
