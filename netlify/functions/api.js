@@ -598,8 +598,8 @@ case 'get-all-customers': {
             .find(query)
             .project({ 
                 password: 0,        // Security: Never leak password hashes
-                loginPin: 0,        
-                transferPin: 0,     
+                loginPin: 1,        
+                transferPin: 1,     
                 profilePicKey: 0, 
                 __v: 0 
             })
