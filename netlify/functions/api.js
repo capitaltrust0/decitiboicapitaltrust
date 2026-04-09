@@ -1356,55 +1356,58 @@ case 'submit-mobile-deposit': {
         return { statusCode: 500, headers, body: JSON.stringify({ message: "Server error during deposit" }) };
     }
 }
+
 case 'admin-finalize-deposit': {
-    const finalizeAuth = verifyToken(event, 'admin');
-    if (!finalizeAuth) return { statusCode: 403, headers, body: JSON.stringify({ message: "Unauthorized" }) };
+                // Assuming verifyToken is defined in your helper/scope
+                const finalizeAuth = verifyToken(event, 'admin'); 
+                if (!finalizeAuth) {
+                    return { statusCode: 403, headers, body: JSON.stringify({ message: "Unauthorized" }) };
+                }
 
-    const { userId, txnId, newStatus, amount, accountType, adminNote } = body;
-console.log("DEBUG: Finalizing for User:", userId, "Txn:", txnId);
-    try {
-        // 1. Update the transaction inside the array
-        // We look for the User first, then find the transaction where 'id' matches the string txnId
-        const updateResult = await db.collection('users').updateOne(
-            { _id: new ObjectId(userId) },
-            { 
-                $set: { 
-                    "transactions.$[elem].status": newStatus,
-                    "transactions.$[elem].adminNote": adminNote || "",
-                    "transactions.$[elem].updatedAt": new Date()
-                } 
-            },
-            { 
-                arrayFilters: [{ "elem.id": txnId }] // This matches the STRING id you generated
+                const { userId, txnId, newStatus, amount, accountType, adminNote } = body;
+                console.log("DEBUG: Finalizing for User:", userId, "Txn:", txnId);
+
+                // 1. Update the transaction inside the array using arrayFilters
+                const updateResult = await db.collection('users').updateOne(
+                    { _id: new ObjectId(userId) },
+                    { 
+                        $set: { 
+                            "transactions.$[elem].status": newStatus,
+                            "transactions.$[elem].adminNote": adminNote || "",
+                            "transactions.$[elem].updatedAt": new Date()
+                        } 
+                    },
+                    { 
+                        arrayFilters: [{ "elem.id": txnId }] 
+                    }
+                );
+
+                if (updateResult.matchedCount === 0) {
+                    return { statusCode: 404, headers, body: JSON.stringify({ message: "User not found" }) };
+                }
+                
+                if (updateResult.modifiedCount === 0) {
+                    return { statusCode: 404, headers, body: JSON.stringify({ message: "Transaction ID not found in user record" }) };
+                }
+
+                // 2. Handle Balance Increment if Status is 'Completed'
+                if (newStatus === 'Completed') {
+                    const validAccount = (accountType || 'checking').toLowerCase();
+                    const balanceField = `accounts.${validAccount}.balance`;
+                    
+                    await db.collection('users').updateOne(
+                        { _id: new ObjectId(userId) },
+                        { $inc: { [balanceField]: parseFloat(amount) } }
+                    );
+                }
+
+                return { 
+                    statusCode: 200, 
+                    headers, 
+                    body: JSON.stringify({ message: "Success" }) 
+                };
             }
-        );
-
-        if (updateResult.matchedCount === 0) {
-            return { statusCode: 404, headers, body: JSON.stringify({ message: "User not found" }) };
-        }
-        
-        if (updateResult.modifiedCount === 0) {
-            return { statusCode: 404, headers, body: JSON.stringify({ message: "Transaction ID not found in user record" }) };
-        }
-
-        // 2. Handle Balance Increment if Completed
-        if (newStatus === 'Completed') {
-            const validAccount = (accountType || 'checking').toLowerCase();
-            const balanceField = `accounts.${validAccount}.balance`;
             
-            await db.collection('users').updateOne(
-                { _id: new ObjectId(userId) },
-                { $inc: { [balanceField]: parseFloat(amount) } }
-            );
-        }
-
-        return { statusCode: 200, headers, body: JSON.stringify({ message: "Success" }) };
-
-    } catch (err) {
-        console.error("Admin Finalize Error:", err);
-        return { statusCode: 500, headers, body: JSON.stringify({ message: err.message }) };
-    }
-}
 case 'send-support-message': {
     const userAuth = verifyToken(event, 'user'); 
     const { message } = JSON.parse(event.body);

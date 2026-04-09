@@ -1,18 +1,22 @@
 # 1. BUILD SETTINGS
 [build]
-  # This is the folder containing your HTML, CSS, and JS files
   publish = "/"
-  
-  # This is the folder where your Netlify functions (backend) are stored
   functions = "netlify/functions"
 
-# 2. REDIRECTS (Prevents 404 on page refresh for SPAs)
+# 2. REDIRECTS (The Order Matters!)
+# First, route any call to /api directly to your function
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# Second, handle SPA routing (only for paths that aren't /api)
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-# 3. GLOBAL HEADERS (Security & CORS)
+# 3. GLOBAL HEADERS
 [[headers]]
   for = "/*"
   [headers.values]
@@ -20,7 +24,7 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    # Allows your frontend to talk to the backend without CORS blocks
+    # These static headers help, but the Function MUST still return its own headers
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Headers = "Content-Type, Authorization"
     Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
