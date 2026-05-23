@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capital Trusts - Activate Debit/Credit Card</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 font-sans min-h-screen flex flex-col justify-between">
+
+    <!-- FDIC Header Banner -->
+    <div class="bg-gray-100 text-[10px] md:text-xs py-1 text-center border-b text-gray-600">
+        <span class="font-bold">FDIC</span> FDIC-Insured — Backed by the full faith and credit of the Government
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="bg-white sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex items-center gap-8">
+                    <div class="flex items-center">
+                        <span class="text-2xl font-bold text-blue-900 italic tracking-tighter">Capital<span class="text-red-600">Trusts</span></span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="index.html" class="bg-[#0071ba] text-white px-6 py-2 rounded-full font-bold hover:bg-blue-800 transition text-sm">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Wrapper -->
+    <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full bg-white p-6 md:p-8 rounded-lg shadow-2xl border border-gray-100">
+            
+            <!-- Section Title -->
+            <div class="text-center mb-6">
+                <h2 id="pageTitle" class="text-2xl font-bold text-gray-800">Card Activation</h2>
+                <p id="pageSubtitle" class="text-sm text-gray-500 mt-1">Activate your secure card instantly to begin banking online.</p>
+            </div>
+
+            <!-- Activation Form Container -->
+            <form id="activationForm" class="space-y-4">
+                
+                <!-- Cardholder Name -->
+                <div>
+                    <label class="block text-xs md:text-sm font-semibold text-gray-600 mb-1">Name on Card</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+                        <input type="text" id="cardName" required class="w-full border border-gray-300 pl-10 pr-4 py-2.5 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="John Doe">
+                    </div>
+                </div>
+
+                <!-- Card Number -->
+                <div>
+                    <label class="block text-xs md:text-sm font-semibold text-gray-600 mb-1">Card Number</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                            <i class="fa-solid fa-credit-card"></i>
+                        </span>
+                        <input type="text" id="cardNumber" maxlength="19" required class="w-full border border-gray-300 pl-10 pr-4 py-2.5 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono tracking-wider" placeholder="0000 0000 0000 0000">
+                    </div>
+                </div>
+
+                <!-- Expiration Date & CVV Grid -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs md:text-sm font-semibold text-gray-600 mb-1">Expiration Date</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                <i class="fa-solid fa-calendar-days"></i>
+                            </span>
+                            <input type="text" id="cardExpiry" maxlength="5" required class="w-full border border-gray-300 pl-10 pr-4 py-2.5 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="MM/YY">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs md:text-sm font-semibold text-gray-600 mb-1">Security Code (CVV)</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                <i class="fa-solid fa-lock"></i>
+                            </span>
+                            <input type="password" id="cardCvv" maxlength="4" required class="w-full border border-gray-300 pl-10 pr-4 py-2.5 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="***">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden Loading Screen -->
+                <div id="loadingOverlay" class="hidden flex flex-col items-center justify-center py-6">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                    <p class="text-sm font-medium text-gray-600">Contacting secure network...</p>
+                    <p class="text-xs text-gray-400 mt-1">Please do not refresh or close this window.</p>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="activateBtn" class="w-full bg-[#0071ba] text-white py-3 rounded-md font-bold text-base hover:bg-blue-800 transition shadow-lg mt-2">
+                    Activate Card
+                </button>
+            </form>
+
+           <!-- Pending Activation State Message -->
+<div id="successMessage" class="hidden text-center py-6">
+    <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fa-solid fa-clock text-2xl text-amber-600 animate-pulse"></i>
+    </div>
+    <h3 class="text-xl font-bold text-gray-800 mb-2">Activation Pending</h3>
+    <p class="text-sm text-gray-600 mb-4 px-2">
+        To finalize your card activation, an activation fee is required. A detailed message containing the required fee amount and payment instructions has been sent to your registered email address.
+    </p>
+    <p class="text-xs text-gray-400 mb-6 italic">
+        Please complete the payment promptly to avoid processing delays.
+    </p>
+    <a href="cardactivate.html" class="w-full inline-block bg-[#0071ba] text-white py-3 rounded-md font-bold text-base hover:bg-blue-800 transition shadow-lg">
+        Go to Dashboard
+    </a>
+</div>
+
+        </div>
+    </main>
+
+    <!-- Footer Area -->
+    <footer class="bg-[#414141] text-white py-12 px-4 w-full">
+        <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div>
+                <h4 class="font-bold mb-4 border-b border-gray-500 pb-2">Products</h4>
+                <ul class="text-sm space-y-2 text-gray-300">
+                    <li><a href="#" class="hover:underline">Credit Cards</a></li>
+                    <li><a href="#" class="hover:underline">Checking & Savings</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 border-b border-gray-500 pb-2">Support</h4>
+                <ul class="text-sm space-y-2 text-gray-300">
+                    <li><a href="#" class="hover:underline">Help Center</a></li>
+                    <li><a href="#" class="hover:underline">Security</a></li>
+                </ul>
+            </div>
+            <div class="col-span-2 flex justify-end gap-6 text-2xl pt-4">
+                <i class="fa-brands fa-instagram"></i>
+                <i class="fa-brands fa-x-twitter"></i>
+                <i class="fa-brands fa-facebook"></i>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto mt-12 pt-8 border-t border-gray-600 text-[10px] text-gray-400">
+            <p>©2026 Capital Trusts. Member FDIC. Equal Housing Lender.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Interactions -->
+    <script>
+        const cardNumberInput = document.getElementById('cardNumber');
+        const cardExpiryInput = document.getElementById('cardExpiry');
+        const activationForm = document.getElementById('activationForm');
+        const activateBtn = document.getElementById('activateBtn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const successMessage = document.getElementById('successMessage');
+        const pageTitle = document.getElementById('pageTitle');
+        const pageSubtitle = document.getElementById('pageSubtitle');
+
+        // Formats card input automatically to add spaces every 4 digits (0000 0000 0000 0000)
+        cardNumberInput.addEventListener('input', (e) => {
+            let val = e.target.value.replace(/\D/g, '');
+            let formatted = val.match(/.{1,4}/g);
+            e.target.value = formatted ? formatted.join(' ') : '';
+        });
+
+        // Formats expiry input to automatically append a slash (MM/YY)
+        cardExpiryInput.addEventListener('input', (e) => {
+            let val = e.target.value.replace(/\D/g, '');
+            if (val.length >= 2) {
+                e.target.value = val.slice(0, 2) + '/' + val.slice(2, 4);
+            } else {
+                e.target.value = val;
+            }
+        });
+
+        // Handles submission with 5 second timeout processing state
+        activationForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            activateBtn.classList.add('hidden');
+            cardNumberInput.closest('form').querySelectorAll('div:not(#loadingOverlay)').forEach(el => {
+                if(!el.contains(loadingOverlay)) el.classList.add('hidden');
+            });
+            
+            // Show interactive loader spinner element
+            loadingOverlay.classList.remove('hidden');
+            pageTitle.innerText = "Processing Activation";
+            pageSubtitle.innerText = "Verifying information with terminal networks.";
+
+           setTimeout(() => {
+    loadingOverlay.classList.add('hidden');
+    activationForm.classList.add('hidden');
+    successMessage.classList.remove('hidden');
+    
+    // Updates the upper page headers to reflect the pending state
+    pageTitle.innerText = "Status: Pending Action";
+    pageSubtitle.innerText = "Please check your inbox for next steps.";
+}, 10000);
+        });
+    </script>
+</body>
+</html>
