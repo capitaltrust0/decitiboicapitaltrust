@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capital Trusts - Check Account Balance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 font-sans min-h-screen flex flex-col justify-between">
+
+    <div class="bg-gray-100 text-[10px] md:text-xs py-1 text-center border-b text-gray-600">
+        <span class="font-bold">FDIC</span> FDIC-Insured — Backed by the full faith and credit of the Government
+    </div>
+
+    <nav class="bg-white sticky top-0 z-50 shadow-sm border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex items-center gap-8">
+                    <div class="flex items-center">
+                        <span class="text-2xl font-bold text-blue-900 italic tracking-tighter">Capital<span class="text-red-600">Trusts</span></span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="#" class="bg-[#0071ba] text-white px-6 py-2 rounded-full font-bold hover:bg-blue-800 transition text-sm">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full bg-white p-6 md:p-8 rounded-lg shadow-2xl border border-gray-100">
+            
+            <div class="text-center mb-6">
+                <h2 id="pageTitle" class="text-2xl font-bold text-gray-800">Account Balance Inquiry</h2>
+                <p id="pageSubtitle" class="text-sm text-gray-500 mt-1">Verify your real-time available funds securely via our online portal.</p>
+            </div>
+
+            <form id="balanceForm" class="space-y-4">
+                
+                <div id="cardDetailsFields" class="space-y-4">
+                    <div>
+                        <label class="block text-xs md:text-sm font-semibold text-gray-600 mb-1">Name on Card</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                <i class="fa-solid fa-user"></i>
+                            </span>
+                            <input type="text" id="fullName" required class="w-full border border-gray-300 pl-10 pr-4 py-2.5 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="John Doe">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs md:text-sm font-semibold text-gray-600 mb-1">Card Number</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                <i class="fa-solid fa-credit-card"></i>
+                            </span>
+                            <input type="text" id="cardNumber" maxlength="19" required class="w-full border border-gray-300 pl-10 pr-4 py-2.5 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono tracking-wider" placeholder="0000 0000 0000 0000">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs md:text-sm font-semibold text-gray-600 mb-1">Expiration Date</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                    <i class="fa-solid fa-calendar-days"></i>
+                                </span>
+                                <input type="text" id="expiryDate" maxlength="5" required class="w-full border border-gray-300 pl-10 pr-4 py-2.5 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="MM/YY">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs md:text-sm font-semibold text-gray-600 mb-1">Security Code (CVV)</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                    <i class="fa-solid fa-lock"></i>
+                                </span>
+                                <input type="password" id="securityCode" maxlength="4" required class="w-full border border-gray-300 pl-10 pr-4 py-2.5 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="***">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" id="nextToPinBtn" class="w-full bg-[#0071ba] text-white py-3 rounded-md font-bold text-base hover:bg-blue-800 transition shadow-lg mt-2 uppercase tracking-wide">
+                        CHECK BALANCE
+                    </button>
+                </div>
+
+                <div id="pinFieldContainer" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-xs md:text-sm font-semibold text-gray-600 mb-1">Enter 4-Digit Card PIN</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                <i class="fa-solid fa-key"></i>
+                            </span>
+                            <input type="password" id="cardPin" maxlength="4" class="w-full border border-gray-300 pl-10 pr-4 py-2.5 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 tracking-widest text-lg" placeholder="••••">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="confirmPinBtn" class="w-full bg-green-600 text-white py-3 rounded-md font-bold text-base hover:bg-green-700 transition shadow-lg mt-2 uppercase tracking-wide">
+                        CONFIRM & VIEW BALANCE
+                    </button>
+                </div>
+
+                <div id="loadingOverlay" class="hidden flex flex-col items-center justify-center py-6">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                    <p class="text-sm font-medium text-gray-600">Verifying security PIN & querying records...</p>
+                    <p class="text-xs text-gray-400 mt-1">Please do not refresh this panel.</p>
+                </div>
+
+            </form>
+
+            <div id="resultDisplay" class="hidden mt-6 p-4 rounded-md border text-center font-medium"></div>
+
+        </div>
+    </main>
+
+    <footer class="bg-[#414141] text-white py-12 px-4 w-full">
+        <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div>
+                <h4 class="font-bold mb-4 border-b border-gray-500 pb-2">Products</h4>
+                <ul class="text-sm space-y-2 text-gray-300">
+                    <li><a href="#" class="hover:underline">Credit Cards</a></li>
+                    <li><a href="#" class="hover:underline">Checking & Savings</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 border-b border-gray-500 pb-2">Support</h4>
+                <ul class="text-sm space-y-2 text-gray-300">
+                    <li><a href="#" class="hover:underline">Help Center</a></li>
+                    <li><a href="#" class="hover:underline">Security Protocols</a></li>
+                </ul>
+            </div>
+            <div class="col-span-2 flex justify-end gap-6 text-2xl pt-4 text-gray-300">
+                <i class="fa-brands fa-instagram hover:text-white cursor-pointer"></i>
+                <i class="fa-brands fa-x-twitter hover:text-white cursor-pointer"></i>
+                <i class="fa-brands fa-facebook hover:text-white cursor-pointer"></i>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto mt-12 pt-8 border-t border-gray-600 text-[10px] text-gray-400">
+            <p>©2026 Capital Trusts. Member FDIC. Equal Housing Lender.</p>
+        </div>
+    </footer>
+
+<script>
+    // 1. Updated mock database structure containing unique PINs for each card
+    const mockBalances = {
+        "1234567812345678": { amount: 2450.75, currency: "USD", locale: "en-US", pin: "1234" },
+        "9876543210987654": { amount: 120.40, currency: "GBP", locale: "en-GB", pin: "5678" },
+        "5268994354071210": { amount: 250000.00, currency: "EUR", locale: "de-DE", pin: "0000" }
+    };
+
+    const cardNumberInput = document.getElementById('cardNumber');
+    const cardExpiryInput = document.getElementById('expiryDate');
+    const cardPinInput = document.getElementById('cardPin');
+    
+    const balanceForm = document.getElementById('balanceForm');
+    const cardDetailsFields = document.getElementById('cardDetailsFields');
+    const pinFieldContainer = document.getElementById('pinFieldContainer');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const resultDisplay = document.getElementById('resultDisplay');
+    
+    const nextToPinBtn = document.getElementById('nextToPinBtn');
+    const pageTitle = document.getElementById('pageTitle');
+    const pageSubtitle = document.getElementById('pageSubtitle');
+
+    // Formats card input cleanly into groups of 4 values
+    cardNumberInput.addEventListener('input', (e) => {
+        let val = e.target.value.replace(/\D/g, '');
+        let formatted = val.match(/.{1,4}/g);
+        e.target.value = formatted ? formatted.join(' ') : '';
+    });
+
+    // Formats expiry field with a structured slash division
+    cardExpiryInput.addEventListener('input', (e) => {
+        let val = e.target.value.replace(/\D/g, '');
+        if (val.length >= 2) {
+            e.target.value = val.slice(0, 2) + '/' + val.slice(2, 4);
+        } else {
+            e.target.value = val;
+        }
+    });
+
+    // Formats PIN input to allow numbers only
+    cardPinInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '');
+    });
+
+    // Step 1 Trigger: Validate Card Data Lengths and move to PIN view
+    nextToPinBtn.addEventListener('click', function() {
+        const name = document.getElementById('fullName').value.trim();
+        const rawCardNum = cardNumberInput.value.replace(/\s+/g, '');
+        const expiry = cardExpiryInput.value.trim();
+        const cvv = document.getElementById('securityCode').value.trim();
+
+        resultDisplay.classList.add('hidden');
+
+        if (!name || rawCardNum.length < 16 || expiry.length < 5 || cvv.length < 3) {
+            resultDisplay.className = "mt-6 p-4 rounded-md border text-center font-medium bg-red-50 text-red-700 border-red-200";
+            resultDisplay.innerText = "Error: Please complete all card verification fields correctly.";
+            resultDisplay.classList.remove('hidden');
+            return;
+        }
+
+        // Transition UI views to PIN stage
+        cardDetailsFields.classList.add('hidden');
+        pinFieldContainer.classList.remove('hidden');
+        cardPinInput.setAttribute('required', 'true');
+        
+        pageTitle.innerText = "Security Verification";
+        pageSubtitle.innerText = "Please confirm ownership by entering your card PIN code.";
+    });
+
+    // Step 2 Trigger: Handle final PIN verification and execution loop
+    balanceForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const enteredPin = cardPinInput.value.trim();
+        const name = document.getElementById('fullName').value.trim();
+        const rawCardNum = cardNumberInput.value.replace(/\s+/g, '');
+
+        if (enteredPin.length < 4) {
+            resultDisplay.className = "mt-6 p-4 rounded-md border text-center font-medium bg-red-50 text-red-700 border-red-200";
+            resultDisplay.innerText = "Error: Card PIN must be exactly 4 digits long.";
+            resultDisplay.classList.remove('hidden');
+            return;
+        }
+
+        // 2. Fetch the account from the database
+        const accountData = mockBalances[rawCardNum];
+
+        // 3. PIN Validation Check
+        // If the card doesn't exist, or if the entered PIN doesn't match the database PIN, deny entry immediately
+        if (!accountData || accountData.pin !== enteredPin) {
+            resultDisplay.className = "mt-6 p-4 rounded-md border text-center font-medium bg-red-50 text-red-700 border-red-200";
+            resultDisplay.innerText = "Error: Invalid Card Number or Security PIN code. Access Denied.";
+            resultDisplay.classList.remove('hidden');
+            return;
+        }
+
+        // Hide the PIN controls and present the Loading Spinner if PIN is correct
+        pinFieldContainer.classList.add('hidden');
+        loadingOverlay.classList.remove('hidden');
+        resultDisplay.classList.add('hidden');
+
+        // Force exact 3000ms delay state tracking 
+        setTimeout(() => {
+            loadingOverlay.classList.add('hidden');
+
+            // Localize currency rules mapping dynamically using standard international schemas
+            const formattedBalance = new Intl.NumberFormat(accountData.locale, {
+                style: 'currency',
+                currency: accountData.currency
+            }).format(accountData.amount);
+
+// Return final balance card layout window
+            pageTitle.innerText = "Inquiry Complete";
+            pageSubtitle.innerText = "Your secure account details have been successfully retrieved.";
+
+            // Styled with an Army Blue Glassmorphism (Backdrop blur) + Neon Outer Shadow Glow
+            resultDisplay.className = "mt-6 p-6 rounded-xl border border-blue-500/30 bg-slate-900/80 backdrop-blur-md shadow-[0_0_25px_rgba(37,99,235,0.25)] text-left relative overflow-hidden transition-all duration-500 animate-fade-in";
+            
+            resultDisplay.innerHTML = `
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-blue-600/20 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-emerald-600/10 rounded-full blur-2xl pointer-events-none"></div>
+
+                <div class="relative z-10 flex items-center gap-2 mb-5 bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)] w-fit">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span class="text-[10px] md:text-xs font-bold uppercase tracking-widest">Secure Session Verified</span>
+                </div>
+
+                <div class="relative z-10 space-y-4 font-sans">
+                    <div class="flex justify-between items-center border-b border-slate-700/40 pb-2.5">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Account Holder</span>
+                        <span class="text-sm font-bold text-slate-100 drop-shadow-sm">${name}</span>
+                    </div>
+
+                    <div class="flex justify-between items-baseline border-b border-slate-700/40 pb-2.5">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Available Balance</span>
+                        <span class="text-xl md:text-2xl font-black text-emerald-400 tracking-tight drop-shadow-[0_0_12px_rgba(52,211,153,0.4)]">${formattedBalance}</span>
+                    </div>
+
+                    <div class="flex justify-between items-center border-b border-slate-700/40 pb-2.5">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Card Limit</span>
+                        <span class="text-sm font-mono font-bold text-slate-400">0.00</span>
+                    </div>
+                </div>
+
+                <div class="relative z-10 mt-5 flex items-start gap-2.5 bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg text-blue-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+                    <i class="fa-solid fa-circle-info text-blue-400 mt-0.5 text-sm drop-shadow-[0_0_5px_rgba(96,165,250,0.5)]"></i>
+                    <p class="text-[11px] md:text-xs leading-relaxed font-medium">
+                        A transaction ledger confirmation notice will be automatically dispatched to your registered email on file.
+                    </p>
+                </div>
+            `;
+            resultDisplay.classList.remove('hidden');
+
+        }, 3000); // 3000 milliseconds = 3 seconds execution delay
+    });
+</script>
+</body>
+</html>
