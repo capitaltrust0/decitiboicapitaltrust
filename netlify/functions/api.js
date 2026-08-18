@@ -569,17 +569,16 @@ case 'admin-send-email': {
     }
 
     try {
-        // 1. Gmail SMTP Configuration
         const transporter = nodemailer.createTransport({
-            service: 'gmail', // Nodemailer has built-in support for Gmail
+            service: 'gmail',
             auth: {
                 user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS // Your 16-character Google App Password
+                pass: process.env.EMAIL_PASS 
             }
         });
 
         const mailOptions = {
-            from: `"Capital Trusts" <${process.env.EMAIL_USER}>`,
+            from: `"Capital Suntrust" <${process.env.EMAIL_USER}>`,
             to: recipientEmail,
             subject: subject,
             text: message,
@@ -593,7 +592,7 @@ case 'admin-send-email': {
                         ${message.replace(/\n/g, '<br>')}
                     </div>
                     <div style="background-color: #f8fafc; padding: 20px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
-                        &copy; 2026 Capital Trust Private Wealth. This is a secure, encrypted message. <br>
+                        &copy; 2026 Capital Suntrust Private Wealth. This is a secure, encrypted message. <br>
                         If you did not expect this email, please contact our fraud department.
                     </div>
                 </div>
@@ -1045,7 +1044,7 @@ case 'lookup-bank':
     "061000104": "Bank of America",
     
     // Internal & Systems
-    "CT-SYSTEM-01": "Capital Trust Internal",
+    "CT-SYSTEM-01": "Capital Suntrust Internal",
 
     // Australia (BSB Codes)
     "BSB062000": "Commonwealth Bank of Australia",
@@ -1186,7 +1185,7 @@ case 'lookup-bank':
                 recipientName: recName,
                 recipientAccount: recAccount || toAccount,
                 routingNumber: routingCode || 'N/A',
-                bankName: bankName || 'Capital Trust Internal',
+                bankName: bankName || 'Capital Suntrust Internal',
                 method: transferType,
                 referenceMemo: memo
             }
