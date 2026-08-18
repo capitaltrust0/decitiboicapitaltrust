@@ -101,16 +101,39 @@
 
    <script>
     let allCustomers = [];
-    const currencyMap = { 'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': '$', 'CAD': 'CA$', 'MXN': '$', 'PHP': '₱' };
-    
+ const currencyMap = { 
+        // Major / Existing
+        'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': '$', 'CAD': 'CA$', 'MXN': '$', 'PHP': '₱',
+
+        // Central & North America
+        'BZD': 'BZ$', 'CRC': '₡', 'GTQ': 'Q', 'HNL': 'L', 'NIO': 'C$', 'PAB': 'B/.',
+
+        // Caribbean
+        'BSD': 'B$', 'BBD': 'Bds$', 'CUP': '$', 'DOP': 'RD$', 'HTG': 'G', 'JMD': 'J$', 'TTD': 'TT$',
+
+        // South America
+        'ARS': '$', 'BOB': 'Bs.', 'BRL': 'R$', 'CLP': '$', 'COP': '$', 'GYD': '$', 'PYG': '₲', 'PEN': 'S/', 'SRD': '$', 'UYU': '$U', 'VES': 'Bs.S',
+
+        // Asia & East Asia
+        'JPY': '¥', 'KRW': '₩', 'CNY': '¥', 'HKD': 'HK$', 'TWD': 'NT$', 'MOP': 'MOP$', 'SGD': 'S$', 'MYR': 'RM', 'THB': '฿', 'IDR': 'Rp', 'VND': '₫', 'INR': '₹', 'PKR': '₨', 'BDT': '৳', 'LKR': 'Rs', 'NP': 'रू', 'NPR': 'रू',
+
+        // Other
+        'NZD': 'NZ$'
+    };       
+
    const regionalLabelMap = {
-    'USD': 'Routing Number',
-    'GBP': 'Sort Code',
-    'EUR': 'IBAN Number',
-    'AUD': 'BSB Number',
-    'MXN': 'CLABE',
-    'PHP': 'BRSTN / Account No',
-    'CAD': 'Transit/Inst No'
+    'USD': 'Routing Number', 'MXN': 'CLABE', 'CAD': 'Transit/Inst No', 'BZD': 'Routing / Account Number',
+    'CRC': 'IBAN / Cuenta Cliente', 'GTQ': 'Cta. No.', 'HNL': 'Cuenta No.', 'NIO': 'Cuenta No.',
+    'PAB': 'Cuenta No.', 'BSD': 'Transit / Account No.', 'BBD': 'Transit / Account No.', 'CUP': 'Cuenta No.',
+    'DOP': 'Cuenta No.', 'HTG': 'Compte No.', 'JMD': 'Transit / Account No.', 'TTD': 'Transit / Account No.',
+    'ARS': 'CBU / Alias', 'BOB': 'Nro. de Cuenta', 'BRL': 'Conta / PIX / ISPB', 'CLP': 'Nro. de Cuenta',
+    'COP': 'Nro. de Cuenta', 'GYD': 'Account No.', 'PYG': 'Nro. de Cuenta', 'PEN': 'CCI (Interbancario)',
+    'SRD': 'Account No.', 'UYU': 'Nro. de Cuenta', 'VES': 'Nro. de Cuenta (20 Dig)', 'GBP': 'Sort Code',
+    'EUR': 'IBAN Number', 'JPY': 'Zengin Code / Account No.', 'KRW': 'Account No.', 'CNY': 'CNAPS / Account No.',
+    'HKD': 'Clearing / Account No.', 'TWD': 'Bank Code / Account No.', 'MOP': 'Account No.', 'SGD': 'Bank/Branch/Account',
+    'MYR': 'Account No.', 'THB': 'Routing / Account No.', 'IDR': 'No. Rekening', 'VND': 'Account No.',
+    'PHP': 'BRSTN / Account No', 'INR': 'IFSC Code', 'PKR': 'IBAN / Account No.', 'BDT': 'Routing / Account No.',
+    'LKR': 'Bank Code / Account No.', 'NPR': 'Account No.', 'AUD': 'BSB Number', 'NZD': 'Bank/Branch/Account'
 };
 
     async function fetchCustomers() {
@@ -367,16 +390,68 @@
         const swiftInput = document.getElementById(`swift-${userId}`);
         
         const L = (n) => Array.from({length: n}, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join('');
-        
-        let generatedSwift = "";
+      let generatedSwift = "";
         switch(currency) {
+            // North America & Central America
             case 'USD': generatedSwift = `${L(4)}US33898`; break;
-            case 'GBP': generatedSwift = `${L(4)}GB2L323`; break;
-            case 'EUR': generatedSwift = `${L(4)}FRPP909`; break;
-            case 'AUD': generatedSwift = `${L(4)}AU2S732`; break;
             case 'CAD': generatedSwift = `${L(4)}CATT233`; break;
             case 'MXN': generatedSwift = `${L(4)}MXMM099`; break;
+            case 'BZD': generatedSwift = `${L(4)}BZMM011`; break;
+            case 'CRC': generatedSwift = `${L(4)}CRMM022`; break;
+            case 'GTQ': generatedSwift = `${L(4)}GTMM033`; break;
+            case 'HNL': generatedSwift = `${L(4)}HNMM044`; break;
+            case 'NIO': generatedSwift = `${L(4)}NIMM055`; break;
+            case 'PAB': generatedSwift = `${L(4)}PAMM066`; break;
+
+            // Caribbean
+            case 'BSD': generatedSwift = `${L(4)}BSMM011`; break;
+            case 'BBD': generatedSwift = `${L(4)}BBMM022`; break;
+            case 'CUP': generatedSwift = `${L(4)}CUMM033`; break;
+            case 'DOP': generatedSwift = `${L(4)}DOMM044`; break;
+            case 'HTG': generatedSwift = `${L(4)}HTMM055`; break;
+            case 'JMD': generatedSwift = `${L(4)}JMMM066`; break;
+            case 'TTD': generatedSwift = `${L(4)}TTMM077`; break;
+
+            // South America
+            case 'ARS': generatedSwift = `${L(4)}ARMM111`; break;
+            case 'BOB': generatedSwift = `${L(4)}BOMM222`; break;
+            case 'BRL': generatedSwift = `${L(4)}BRMM333`; break;
+            case 'CLP': generatedSwift = `${L(4)}CLMM444`; break;
+            case 'COP': generatedSwift = `${L(4)}COMM555`; break;
+            case 'GYD': generatedSwift = `${L(4)}GYMM666`; break;
+            case 'PYG': generatedSwift = `${L(4)}PYMM777`; break;
+            case 'PEN': generatedSwift = `${L(4)}PEMM888`; break;
+            case 'SRD': generatedSwift = `${L(4)}SRMM999`; break;
+            case 'UYU': generatedSwift = `${L(4)}UYMM101`; break;
+            case 'VES': generatedSwift = `${L(4)}VEMM202`; break;
+
+            // UK & Europe
+            case 'GBP': generatedSwift = `${L(4)}GB2L323`; break;
+            case 'EUR': generatedSwift = `${L(4)}FRPP909`; break;
+
+            // Asia & East Asia
+            case 'JPY': generatedSwift = `${L(4)}JPJT001`; break;
+            case 'KRW': generatedSwift = `${L(4)}KRSE002`; break;
+            case 'CNY': generatedSwift = `${L(4)}CNSH003`; break;
+            case 'HKD': generatedSwift = `${L(4)}HKHK004`; break;
+            case 'TWD': generatedSwift = `${L(4)}TWTP005`; break;
+            case 'MOP': generatedSwift = `${L(4)}MOMM006`; break;
+            case 'SGD': generatedSwift = `${L(4)}SGSG007`; break;
+            case 'MYR': generatedSwift = `${L(4)}MYKL008`; break;
+            case 'THB': generatedSwift = `${L(4)}THBK009`; break;
+            case 'IDR': generatedSwift = `${L(4)}IDJK010`; break;
+            case 'VND': generatedSwift = `${L(4)}VNHA011`; break;
             case 'PHP': generatedSwift = `${L(4)}PHMM032`; break;
+            case 'INR': generatedSwift = `${L(4)}INBB012`; break;
+            case 'PKR': generatedSwift = `${L(4)}PKKA013`; break;
+            case 'BDT': generatedSwift = `${L(4)}BDDH014`; break;
+            case 'LKR': generatedSwift = `${L(4)}LKCM015`; break;
+            case 'NPR': generatedSwift = `${L(4)}NPKT016`; break;
+
+            // Oceania & Other
+            case 'AUD': generatedSwift = `${L(4)}AU2S732`; break;
+            case 'NZD': generatedSwift = `${L(4)}NZWN123`; break;
+
             default:    generatedSwift = `${L(4)}${L(2)}${L(2)}783`;
         }
 
@@ -535,18 +610,10 @@ function generateRoutingNumber(userId) {
     // Helper to generate random numbers
     const rand = (n) => Math.floor(Math.pow(10, n-1) + Math.random() * (Math.pow(10, n) - Math.pow(10, n-1) - 1));
 
-    switch(currency) {
+ switch(currency) {
+        // North America & Central America
         case 'USD': 
             generatedCode = rand(9).toString(); // 9-digit Routing
-            break;
-        case 'GBP': 
-            generatedCode = `${rand(2)}-${rand(2)}-${rand(2)}`; // Sort Code format: 00-00-00
-            break;
-        case 'EUR': 
-            generatedCode = "FR76" + rand(14).toString(); // Sample IBAN format
-            break;
-        case 'AUD': 
-            generatedCode = `${rand(3)}-${rand(3)}`; // BSB Format: 000-000
             break;
         case 'CAD': 
             generatedCode = `${rand(5)}-${rand(3)}`; // Transit (5) - Inst (3)
@@ -554,13 +621,69 @@ function generateRoutingNumber(userId) {
         case 'MXN': 
             generatedCode = rand(18).toString(); // 18-digit CLABE
             break;
+        case 'BZD': 
+            generatedCode = rand(10).toString(); 
+            break;
+        case 'CRC': 
+            generatedCode = "CR" + rand(18).toString(); // IBAN format for CR
+            break;
+        case 'GTQ': case 'HNL': case 'NIO': case 'PAB': 
+            generatedCode = rand(10).toString(); 
+            break;
+
+        // Caribbean
+        case 'BSD': case 'BBD': case 'JMD': case 'TTD': 
+            generatedCode = `${rand(5)}-${rand(3)}`; 
+            break;
+        case 'CUP': case 'DOP': case 'HTG': 
+            generatedCode = rand(12).toString(); 
+            break;
+
+        // South America
+        case 'ARS': 
+            generatedCode = rand(22).toString(); // CBU format
+            break;
+        case 'BRL': 
+            generatedCode = rand(14).toString(); // Conta / ISPB
+            break;
+        case 'PEN': 
+            generatedCode = rand(20).toString(); // CCI format
+            break;
+        case 'BOB': case 'CLP': case 'COP': case 'GYD': case 'PYG': case 'SRD': case 'UYU': case 'VES': 
+            generatedCode = rand(12).toString(); 
+            break;
+
+        // UK & Europe
+        case 'GBP': 
+            generatedCode = `${rand(2)}-${rand(2)}-${rand(2)}`; // Sort Code format: 00-00-00
+            break;
+        case 'EUR': 
+            generatedCode = "FR76" + rand(14).toString(); // Sample IBAN format
+            break;
+
+        // Asia & East Asia
+        case 'JPY': case 'KRW': case 'CNY': case 'HKD': case 'TWD': case 'MOP': case 'SGD': case 'MYR': case 'THB': case 'IDR': case 'VND': case 'PKR': case 'BDT': case 'LKR': case 'NPR': 
+            generatedCode = rand(12).toString(); 
+            break;
         case 'PHP': 
             generatedCode = "0" + rand(10).toString(); // 11-digit BRSTN/Account
             break;
+        case 'INR': 
+            generatedCode = "ABCD0" + rand(6).toString(); // IFSC format (4 letters, 0, 6 digits)
+            break;
+
+        // Oceania & Other
+        case 'AUD': 
+            generatedCode = `${rand(3)}-${rand(3)}`; // BSB Format: 000-000
+            break;
+        case 'NZD': 
+            generatedCode = `${rand(6)}-${rand(7)}`; // Bank/Branch/Account format
+            break;
+
         default: 
             generatedCode = rand(10).toString();
     }
-
+    
     routingInput.value = generatedCode;
     
     // Visual feedback

@@ -104,13 +104,45 @@ exports.handler = async (event, context) => {
                 // 3. Helper for account numbers
                 const generateAccNo = () => Math.floor(1000000000 + Math.random() * 9000000000).toString();
 
-                const countryToCurrency = { 
-        // North America
+               const countryToCurrency = { 
+        // North America & Central America
         'US': 'USD', 'USA': 'USD', 'UNITED STATES': 'USD',
         'MX': 'MXN', 'MEXICO': 'MXN',
         'CA': 'CAD', 'CANADA': 'CAD',
+        'SV': 'USD', 'EL SALVADOR': 'USD',
+        'BZ': 'BZD', 'BELIZE': 'BZD',
+        'CR': 'CRC', 'COSTA RICA': 'CRC',
+        'GT': 'GTQ', 'GUATEMALA': 'GTQ',
+        'HN': 'HNL', 'HONDURAS': 'HNL',
+        'NI': 'NIO', 'NICARAGUA': 'NIO',
+        'PA': 'PAB', 'PANAMA': 'PAB',
+        
+        // Caribbean (North America region)
+        'BS': 'BSD', 'BAHAMAS': 'BSD',
+        'BB': 'BBD', 'BARBADOS': 'BBD',
+        'CU': 'CUP', 'CUBA': 'CUP',
+        'DO': 'DOP', 'DOMINICAN REPUBLIC': 'DOP',
+        'HT': 'HTG', 'HAITI': 'HTG',
+        'JM': 'JMD', 'JAMAICA': 'JMD',
+        'TT': 'TTD', 'TRINIDAD AND TOBAGO': 'TTD',
+
+        // South America
+        'AR': 'ARS', 'ARGENTINA': 'ARS',
+        'BO': 'BOB', 'BOLIVIA': 'BOB',
+        'BR': 'BRL', 'BRAZIL': 'BRL',
+        'CL': 'CLP', 'CHILE': 'CLP',
+        'CO': 'COP', 'COLOMBIA': 'COP',
+        'EC': 'USD', 'ECUADOR': 'USD',
+        'GY': 'GYD', 'GUYANA': 'GYD',
+        'PY': 'PYG', 'PARAGUAY': 'PYG',
+        'PE': 'PEN', 'PERU': 'PEN',
+        'SR': 'SRD', 'SURINAME': 'SRD',
+        'UY': 'UYU', 'URUGUAY': 'UYU',
+        'VE': 'VES', 'VENEZUELA': 'VES',
+
         // UK
         'UK': 'GBP', 'GB': 'GBP', 'UNITED KINGDOM': 'GBP',
+        
         // Euro Zone (Expanded)
         'DE': 'EUR', 'GERMANY': 'EUR',
         'FR': 'EUR', 'FRANCE': 'EUR',
@@ -124,6 +156,25 @@ exports.handler = async (event, context) => {
         'FI': 'EUR', 'FINLAND': 'EUR',
         'GR': 'EUR', 'GREECE': 'EUR',
         'LU': 'EUR', 'LUXEMBOURG': 'EUR',
+
+       'JP': 'JPY', 'JAPAN': 'JPY',
+        'KR': 'KRW', 'SOUTH KOREA': 'KRW', 'KOREA': 'KRW', 'REPUBLIC OF KOREA': 'KRW',
+        'CN': 'CNY', 'CHINA': 'CNY', 'PEOPLES REPUBLIC OF CHINA': 'CNY',
+        'HK': 'HKD', 'HONG KONG': 'HKD',
+        'TW': 'TWD', 'TAIWAN': 'TWD',
+        'MO': 'MOP', 'MACAO': 'MOP', 'MACAU': 'MOP',
+        'SG': 'SGD', 'SINGAPORE': 'SGD',
+        'MY': 'MYR', 'MALAYSIA': 'MYR',
+        'TH': 'THB', 'THAILAND': 'THB',
+        'ID': 'IDR', 'INDONESIA': 'IDR',
+        'VN': 'VND', 'VIETNAM': 'VND',
+        'PH': 'PHP', 'PHILIPPINES': 'PHP',
+        'IN': 'INR', 'INDIA': 'INR',
+        'PK': 'PKR', 'PAKISTAN': 'PKR',
+        'BD': 'BDT', 'BANGLADESH': 'BDT',
+        'LK': 'LKR', 'SRI LANKA': 'LKR',
+        'NP': 'NPR', 'NEPAL': 'NPR',
+
         // Other
         'AU': 'AUD', 'AUSTRALIA': 'AUD',
         'NZ': 'NZD', 'NEW ZEALAND': 'NZD', 
@@ -683,12 +734,15 @@ case 'admin-update-user': {
     }
 }
 
-    case 'admin-add-funds':
+   case 'admin-add-funds':
     const fundsAuth = verifyToken(event, 'admin');
     if (!fundsAuth) return { statusCode: 403, headers, body: JSON.stringify({ message: "Unauthorized" }) };
 
     const updateField = `accounts.${body.accountType.toLowerCase()}.balance`;
     
+    // Use the provided transactionDate if available, otherwise default to current date/time
+    const transactionDate = body.transactionDate ? new Date(body.transactionDate) : new Date();
+
     await db.collection('users').updateOne(
         { _id: new ObjectId(body.userId) },
         { 
@@ -696,7 +750,7 @@ case 'admin-update-user': {
             $push: { transactions: {
                 description: body.memo,
                 amount: parseFloat(body.amount),
-                date: new Date(),
+                date: transactionDate,
                 type: body.amount > 0 ? 'credit' : 'debit',
                 status: 'Completed',
                 accountType: body.accountType
@@ -704,7 +758,6 @@ case 'admin-update-user': {
         }
     );
     return { statusCode: 200, headers, body: JSON.stringify({ message: "Funds adjusted" }) };
-
     
 
 case 'admin-bulk-history': {
@@ -985,14 +1038,45 @@ case 'lookup-bank':
         let bankName = null;
 
         // 1. STATIC FALLBACKS (Prevents 503 for common test cases)
-        const manualRegistry = {
-            "021000021": "JPMorgan Chase Bank",
-            "121000248": "Wells Fargo Bank",
-            "061000104": "Bank of America",
-            "CT-SYSTEM-01": "Capital Trust Internal",
-            "BSB062000": "Commonwealth Bank of Australia",
-            "CC001": "Bank of Montreal (CA)"
-        };
+     const manualRegistry = {
+    // United States (ABA Routing Numbers)
+    "021000021": "JPMorgan Chase Bank",
+    "121000248": "Wells Fargo Bank",
+    "061000104": "Bank of America",
+    
+    // Internal & Systems
+    "CT-SYSTEM-01": "Capital Trust Internal",
+
+    // Australia (BSB Codes)
+    "BSB062000": "Commonwealth Bank of Australia",
+    "BSB032000": "Westpac Banking Corporation",
+    "BSB082000": "National Australia Bank (NAB)",
+    "BSB012000": "Australia and New Zealand Banking Group (ANZ)",
+
+    // Canada (Institution + Transit Numbers / EFT)
+    "CC001": "Bank of Montreal (CA)",
+    "CC003": "Royal Bank of Canada (RBC)",
+    "CC004": "The Bank of Nova Scotia (Scotiabank)",
+    "CC010": "Canadian Imperial Bank of Commerce (CIBC)",
+
+    // United Kingdom (Sort Codes)
+    "400242": "HSBC UK",
+    "200000": "Barclays Bank",
+    "309089": "Lloyds Bank",
+    "502101": "NatWest",
+
+    // New Zealand (BSB / Routing Codes)
+    "NZ0101": "ANZ Bank New Zealand",
+    "NZ0201": "Bank of New Zealand (BNZ)",
+    "NZ0301": "Westpac New Zealand",
+    "NZ0601": "ASB Bank",
+
+    // Japan (Zengin & Branch Codes / US Routing)
+    "021081406": "Bank of Japan (Operations Account 1 / NY Branch - US ABA Routing Number)",
+    "0001001": "Mizuho Bank (Head Office - Zengin Code)",
+    "0005001": "Mitsubishi UFJ Bank (Head Office - Zengin Code)",
+    "0009001": "Sumitomo Mitsui Banking Corporation (Head Office - Zengin Code)"
+};
 
         if (manualRegistry[code.trim()]) {
             return { statusCode: 200, headers, body: JSON.stringify({ bankName: manualRegistry[code.trim()] }) };
@@ -1358,55 +1442,68 @@ case 'submit-mobile-deposit': {
 }
 
 case 'admin-finalize-deposit': {
-                // Assuming verifyToken is defined in your helper/scope
-                const finalizeAuth = verifyToken(event, 'admin'); 
-                if (!finalizeAuth) {
-                    return { statusCode: 403, headers, body: JSON.stringify({ message: "Unauthorized" }) };
-                }
+    const finalizeAuth = verifyToken(event, 'admin'); 
+    if (!finalizeAuth) {
+        return { statusCode: 403, headers, body: JSON.stringify({ message: "Unauthorized" }) };
+    }
 
-                const { userId, txnId, newStatus, amount, accountType, adminNote } = body;
-                console.log("DEBUG: Finalizing for User:", userId, "Txn:", txnId);
+    const { userId, txnId, newStatus, amount, accountType, adminNote } = body;
+    console.log("DEBUG: Finalizing for User:", userId, "Txn:", txnId);
 
-                // 1. Update the transaction inside the array using arrayFilters
-                const updateResult = await db.collection('users').updateOne(
-                    { _id: new ObjectId(userId) },
-                    { 
-                        $set: { 
-                            "transactions.$[elem].status": newStatus,
-                            "transactions.$[elem].adminNote": adminNote || "",
-                            "transactions.$[elem].updatedAt": new Date()
-                        } 
-                    },
-                    { 
-                        arrayFilters: [{ "elem.id": txnId }] 
-                    }
-                );
+    // 1. Fetch the user first to check the current transaction status
+    const userDoc = await db.collection('users').findOne(
+        { _id: new ObjectId(userId) },
+        { projection: { transactions: 1, accounts: 1 } }
+    );
 
-                if (updateResult.matchedCount === 0) {
-                    return { statusCode: 404, headers, body: JSON.stringify({ message: "User not found" }) };
-                }
-                
-                if (updateResult.modifiedCount === 0) {
-                    return { statusCode: 404, headers, body: JSON.stringify({ message: "Transaction ID not found in user record" }) };
-                }
+    if (!userDoc) {
+        return { statusCode: 404, headers, body: JSON.stringify({ message: "User not found" }) };
+    }
 
-                // 2. Handle Balance Increment if Status is 'Completed'
-                if (newStatus === 'Completed') {
-                    const validAccount = (accountType || 'checking').toLowerCase();
-                    const balanceField = `accounts.${validAccount}.balance`;
-                    
-                    await db.collection('users').updateOne(
-                        { _id: new ObjectId(userId) },
-                        { $inc: { [balanceField]: parseFloat(amount) } }
-                    );
-                }
+    const targetTxn = (userDoc.transactions || []).find(t => (t.id === txnId || t._id?.toString() === txnId));
+    if (!targetTxn) {
+        return { statusCode: 404, headers, body: JSON.stringify({ message: "Transaction ID not found in user record" }) };
+    }
 
-                return { 
-                    statusCode: 200, 
-                    headers, 
-                    body: JSON.stringify({ message: "Success" }) 
-                };
-            }
+    const wasAlreadyCompleted = targetTxn.status === 'Completed';
+
+    // 2. Update the transaction array including type: 'credit'
+    const updateResult = await db.collection('users').updateOne(
+        { _id: new ObjectId(userId) },
+        { 
+            $set: { 
+                "transactions.$[elem].status": newStatus,
+                "transactions.$[elem].type": "credit", // <--- ENSURES IT COUNTS AS INFLOW
+                "transactions.$[elem].adminNote": adminNote || "",
+                "transactions.$[elem].updatedAt": new Date()
+            } 
+        },
+        { 
+            arrayFilters: [{ "elem.id": txnId }] 
+        }
+    );
+
+    if (updateResult.matchedCount === 0) {
+        return { statusCode: 404, headers, body: JSON.stringify({ message: "User not found" }) };
+    }
+
+    // 3. Handle Balance Increment if Status is 'Completed' AND wasn't already completed
+    if (newStatus === 'Completed' && !wasAlreadyCompleted) {
+        const validAccount = (accountType || 'checking').toLowerCase();
+        const balanceField = `accounts.${validAccount}.balance`;
+        
+        await db.collection('users').updateOne(
+            { _id: new ObjectId(userId) },
+            { $inc: { [balanceField]: parseFloat(amount) } }
+        );
+    }
+
+    return { 
+        statusCode: 200, 
+        headers, 
+        body: JSON.stringify({ message: "Success" }) 
+    };
+}
             
 case 'send-support-message': {
     const userAuth = verifyToken(event, 'user'); 

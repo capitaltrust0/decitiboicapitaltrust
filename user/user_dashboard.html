@@ -367,12 +367,25 @@
         }
     }
 
-    function updateSpendingAnalysis() {
+   function updateSpendingAnalysis() {
         let totalInflow = 0, totalOutflow = 0;
         const txs = userData.transactions || [];
+        
         txs.forEach(t => {
             const amt = Math.abs(parseFloat(t.amount));
-            t.type === 'credit' ? totalInflow += amt : totalOutflow += amt;
+            
+            // Check if the transaction description mentions a check deposit or deposit
+            const isDeposit = t.description && (
+                t.description.toLowerCase().includes('check deposit') || 
+                t.description.toLowerCase().includes('deposit')
+            );
+
+            // Treat as credit if explicitly marked 'credit' OR if it's a deposit
+            if (t.type === 'credit' || (isDeposit && t.type !== 'debit')) {
+                totalInflow += amt;
+            } else {
+                totalOutflow += amt;
+            }
         });
 
         const fmt = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: userData.currency || 'USD' }).format(v);

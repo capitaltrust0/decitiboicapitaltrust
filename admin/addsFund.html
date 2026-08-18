@@ -84,69 +84,76 @@
 
             <main class="p-4 md:p-8 space-y-8">
                 
-                <section class="max-w-4xl mx-auto">
-                    <div class="flex items-center gap-2 mb-4">
-                        <i class="fa-solid fa-scale-balanced text-navy-light"></i>
-                        <h2 class="font-bold text-gray-800">Adjust Live Balances</h2>
-                    </div>
-                    
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
-                        <form id="fundsForm" onsubmit="handleTransaction(event)" class="space-y-4 md:space-y-6">
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Target Customer</label>
-                               <select id="userSelect" required onchange="syncUserSelections(this.value)" class="w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-navy-light outline-none transition text-sm">
+             <section class="max-w-4xl mx-auto">
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="fa-solid fa-scale-balanced text-navy-light"></i>
+                    <h2 class="font-bold text-gray-800">Adjust Live Balances</h2>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
+                    <form id="fundsForm" onsubmit="handleTransaction(event)" class="space-y-4 md:space-y-6">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Target Customer</label>
+                           <select id="userSelect" required onchange="syncUserSelections(this.value)" class="w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-navy-light outline-none transition text-sm">
     <option value="">Loading customers...</option>
 </select>
-                            </div>
+                        </div>
 
-                            <div id="balanceDisplay" class="hidden grid grid-cols-2 gap-4 p-4 bg-navy-dark rounded-lg text-white">
-                                <div>
-                                    <p class="text-[9px] uppercase opacity-60">Checking Balance</p>
-                                    <p id="checkBal" class="text-md md:text-xl font-bold">--</p>
-                                </div>
-                                <div>
-                                    <p class="text-[9px] uppercase opacity-60">Savings Balance</p>
-                                    <p id="saveBal" class="text-md md:text-xl font-bold">--</p>
-                                </div>
+                        <div id="balanceDisplay" class="hidden grid grid-cols-2 gap-4 p-4 bg-navy-dark rounded-lg text-white">
+                            <div>
+                                <p class="text-[9px] uppercase opacity-60">Checking Balance</p>
+                                <p id="checkBal" class="text-md md:text-xl font-bold">--</p>
                             </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Transaction Type</label>
-                                    <select id="transType" class="w-full border rounded-lg p-3 bg-gray-50 font-bold text-sm">
-                                        <option value="add" class="text-green-600">Credit (Add Funds)</option>
-                                        <option value="deduct" class="text-red-600">Debit (Subtract Funds)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Target Account</label>
-                                    <select id="accountType" class="w-full border rounded-lg p-3 bg-gray-50 font-bold text-sm">
-                                        <option value="Checking">360 Checking</option>
-                                        <option value="Savings">Savings</option>
-                                    </select>
-                                </div>
+                            <div>
+                                <p class="text-[9px] uppercase opacity-60">Savings Balance</p>
+                                <p id="saveBal" class="text-md md:text-xl font-bold">--</p>
                             </div>
+                        </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Amount</label>
-                                    <div class="relative">
-                                        <span id="symbolLabel" class="absolute left-3 top-3 text-gray-400 font-bold">$</span>
-                                        <input type="number" id="amount" step="0.01" required placeholder="0.00" class="w-full border rounded-lg p-3 pl-8 font-bold">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Transaction Memo</label>
-                                    <input type="text" id="memo" placeholder="e.g. Wire Transfer Inbound" class="w-full border rounded-lg p-3 text-sm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Transaction Type</label>
+                                <select id="transType" class="w-full border rounded-lg p-3 bg-gray-50 font-bold text-sm">
+                                    <option value="add" class="text-green-600">Credit (Add Funds)</option>
+                                    <option value="deduct" class="text-red-600">Debit (Subtract Funds)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Target Account</label>
+                                <select id="accountType" class="w-full border rounded-lg p-3 bg-gray-50 font-bold text-sm">
+                                    <option value="Checking">360 Checking</option>
+                                    <option value="Savings">Savings</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Amount</label>
+                                <div class="relative">
+                                    <span id="symbolLabel" class="absolute left-3 top-3 text-gray-400 font-bold">$</span>
+                                    <input type="number" id="amount" step="0.01" required placeholder="0.00" class="w-full border rounded-lg p-3 pl-8 font-bold">
                                 </div>
                             </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Transaction Memo</label>
+                                <input type="text" id="memo" placeholder="e.g. Wire Transfer Inbound" class="w-full border rounded-lg p-3 text-sm">
+                            </div>
+                        </div>
 
-                            <button type="submit" id="submitBtn" class="w-full bg-navy-dark text-white py-4 rounded-xl font-bold hover:bg-navy-light shadow-md transition text-sm">
-                                Execute Financial Adjustment
-                            </button>
-                        </form>
-                    </div>
-                </section>
+                        <!-- Added Transaction Date & Time Field -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Transaction Date & Time (Optional)</label>
+                            <input type="datetime-local" id="transactionDate" class="w-full border rounded-lg p-3 text-sm bg-gray-50 font-medium text-gray-700 focus:ring-2 focus:ring-navy-light outline-none transition">
+                            <p class="text-[10px] text-gray-400 mt-1">Leave blank to use the current date and time automatically.</p>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="w-full bg-navy-dark text-white py-4 rounded-xl font-bold hover:bg-navy-light shadow-md transition text-sm">
+                            Execute Financial Adjustment
+                        </button>
+                    </form>
+                </div>
+    </section>
 
                 <hr class="max-w-4xl mx-auto border-gray-200">
 
@@ -319,8 +326,25 @@
 
    <script>
         let allCustomers = [];
-        const currencyMap = { 'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': '$', 'CAD': 'CA$', 'MXN': '$', 'PHP': '₱' };
-        
+        const currencyMap = { 
+        // Major / Existing
+        'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': '$', 'CAD': 'CA$', 'MXN': '$', 'PHP': '₱',
+
+        // Central & North America
+        'BZD': 'BZ$', 'CRC': '₡', 'GTQ': 'Q', 'HNL': 'L', 'NIO': 'C$', 'PAB': 'B/.',
+
+        // Caribbean
+        'BSD': 'B$', 'BBD': 'Bds$', 'CUP': '$', 'DOP': 'RD$', 'HTG': 'G', 'JMD': 'J$', 'TTD': 'TT$',
+
+        // South America
+        'ARS': '$', 'BOB': 'Bs.', 'BRL': 'R$', 'CLP': '$', 'COP': '$', 'GYD': '$', 'PYG': '₲', 'PEN': 'S/', 'SRD': '$', 'UYU': '$U', 'VES': 'Bs.S',
+
+        // Asia & East Asia
+        'JPY': '¥', 'KRW': '₩', 'CNY': '¥', 'HKD': 'HK$', 'TWD': 'NT$', 'MOP': 'MOP$', 'SGD': 'S$', 'MYR': 'RM', 'THB': '฿', 'IDR': 'Rp', 'VND': '₫', 'INR': '₹', 'PKR': '₨', 'BDT': '৳', 'LKR': 'Rs', 'NP': 'रू', 'NPR': 'रू',
+
+        // Other
+        'NZD': 'NZ$'
+    };        
         const realisticMemos = [
             "Direct Deposit: PAYROLL - ADO CORP ID:99281",
             "Direct Deposit: FED SALARY / TREAS 310",
@@ -412,7 +436,7 @@
             }
         }
 
-        // --- Balance Adjustment Logic ---
+      // --- Balance Adjustment Logic ---
         async function handleTransaction(e) {
             e.preventDefault();
             const userId = document.getElementById('userSelect').value;
@@ -422,7 +446,8 @@
             const transType = document.getElementById('transType').value;
             let amount = parseFloat(document.getElementById('amount').value);
             const account = document.getElementById('accountType').value;
-            const memo = document.getElementById('memo').value || "Administrative Adjustment";
+            const memo = document.getElementById('memo').value || "Credit";
+            const transactionDate = document.getElementById('transactionDate').value;
 
             if (transType === 'deduct') amount = -Math.abs(amount);
             
@@ -433,7 +458,14 @@
                 const response = await fetch('/.netlify/functions/api', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('adminToken')}` },
-                    body: JSON.stringify({ action: 'admin-add-funds', userId, amount, accountType: account, memo: memo })
+                    body: JSON.stringify({ 
+                        action: 'admin-add-funds', 
+                        userId, 
+                        amount, 
+                        accountType: account, 
+                        memo: memo,
+                        transactionDate: transactionDate || null // Sends null if left blank so backend can default to current time
+                    })
                 });
                 if (response.ok) {
                     showNotice("Adjustment Successful", "The user balance has been updated.", "success");
@@ -450,7 +482,7 @@
                 btn.innerHTML = 'Execute Financial Adjustment'; 
             }
         }
-
+        
         // --- History Injection Logic ---
         function autoFillMerchant() {
             const memo = realisticMemos[Math.floor(Math.random() * realisticMemos.length)];

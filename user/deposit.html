@@ -174,50 +174,81 @@
         if (cached) {
             const userData = JSON.parse(cached);
             
-            // Map Currency
+            // Comprehensive Currency Map
             const currencyMap = { 
-                'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': '$', 
-                'CAD': 'CA$', 'MXN': '$', 'PHP': '₱' 
+                // North America & Central America
+                'USD': '$', 'CAD': 'CA$', 'MXN': '$', 'BZD': 'BZ$', 'CRC': '₡', 
+                'GTQ': 'Q', 'HNL': 'L', 'NIO': 'C$', 'PAB': 'B/.',
+
+                // Caribbean
+                'BSD': 'B$', 'BBD': 'Bds$', 'CUP': '$', 'DOP': 'RD$', 
+                'HTG': 'G', 'JMD': 'J$', 'TTD': 'TT$',
+
+                // South America
+                'ARS': '$', 'BOB': 'Bs.', 'BRL': 'R$', 'CLP': '$', 
+                'COP': '$', 'GYD': 'G$', 'PYG': '₲', 'PEN': 'S/.', 
+                'SRD': '$', 'UYU': '$U', 'VES': 'Bs.S',
+
+                // UK & Europe
+                'GBP': '£', 'EUR': '€',
+
+                // Asia & East Asia
+                'JPY': '¥', 'KRW': '₩', 'CNY': '¥', 'HKD': 'HK$', 'TWD': 'NT$', 
+                'MOP': 'MOP$', 'SGD': 'S$', 'MYR': 'RM', 'THB': '฿', 'IDR': 'Rp', 
+                'VND': '₫', 'PHP': '₱', 'INR': '₹', 'PKR': '₨', 'BDT': '৳', 
+                'LKR': 'Rs', 'NPR': 'रू',
+
+                // Oceania & Other
+                'AUD': '$', 'NZD': 'NZ$'
             };
             userSymbol = currencyMap[userData.currency] || '$';
             
             // Update UI Labels
             document.getElementById('user-initials').innerText = `${userData.firstName[0]}${userData.lastName[0]}`.toUpperCase();
-            document.getElementById('currency-label').innerText = userSymbol;
+            if (document.getElementById('currency-label')) {
+                document.getElementById('currency-label').innerText = userSymbol;
+            }
             
             // Check for pending deposits in history
             displayProcessingChecks(userData.transactions || []);
         }
     }
 
-   function displayProcessingChecks(transactions) {
-    const processingSection = document.getElementById('processing-section');
-    const pendingList = document.getElementById('pending-list');
-    
-    // Check for any status starting with "Pending"
-    const pending = transactions.filter(t => 
-        t.type === 'Mobile Deposit' && 
-        (t.status.startsWith('Pending'))
-    );
+    function displayProcessingChecks(transactions) {
+        const processingSection = document.getElementById('processing-section');
+        const pendingList = document.getElementById('pending-list');
+        
+        if (!processingSection || !pendingList) return;
 
-    if (pending.length > 0) {
-        processingSection.classList.remove('hidden');
-        pendingList.innerHTML = pending.map(item => `
-            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex justify-between items-center anim-pulse">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xs">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
+        // Check for any status starting with "Pending" or matching mobile/deposit types
+        const pending = transactions.filter(t => {
+            const type = (t.type || "").toLowerCase();
+            const desc = (t.description || "").toLowerCase();
+            const status = (t.status || "").toLowerCase();
+            const isDepositType = type.includes('mobile') || type.includes('deposit') || desc.includes('deposit');
+            return isDepositType && status.includes('pending');
+        });
+
+        if (pending.length > 0) {
+            processingSection.classList.remove('hidden');
+            pendingList.innerHTML = pending.map(item => `
+                <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex justify-between items-center anim-pulse">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-navy-dark text-[11px]">${item.description}</p>
+                            <p class="text-[9px] text-blue-500 font-bold uppercase tracking-tighter italic">Reviewing Images...</p>
+                        </div>
                     </div>
-                    <div>
-                        <p class="font-bold text-navy-dark text-[11px]">${item.description}</p>
-                        <p class="text-[9px] text-blue-500 font-bold uppercase tracking-tighter italic">Reviewing Images...</p>
-                    </div>
+                    <p class="font-bold text-slate-700 text-xs">${userSymbol}${parseFloat(item.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                 </div>
-                <p class="font-bold text-slate-700 text-xs">${userSymbol}${parseFloat(item.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-            </div>
-        `).join('');
+            `).join('');
+        } else {
+            processingSection.classList.add('hidden');
+        }
     }
-}
 
     function previewImage(input, previewId, placeholderId) {
         if (input.files && input.files[0]) {

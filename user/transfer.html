@@ -270,23 +270,103 @@
 </div>
 <script>
     const token = sessionStorage.getItem('userToken');
-    const currencyMap = { 
-        'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'CNY': '¥', 'ZAR': 'R', 'INR': '₹', 'CAD': 'CA$', 'AUD': 'AU$',
-        'MXN': '$', 'PHP': '₱' 
+  const currencyMap = { 
+        // North America & Central America
+        'USD': '$', 'CAD': 'CA$', 'MXN': '$', 'BZD': 'BZ$', 'CRC': '₡', 
+        'GTQ': 'Q', 'HNL': 'L', 'NIO': 'C$', 'PAB': 'B/.',
+
+        // Caribbean
+        'BSD': 'B$', 'BBD': 'Bds$', 'CUP': '$', 'DOP': 'RD$', 
+        'HTG': 'G', 'JMD': 'J$', 'TTD': 'TT$',
+
+        // South America
+        'ARS': '$', 'BOB': 'Bs.', 'BRL': 'R$', 'CLP': '$', 
+        'COP': '$', 'GYD': 'G$', 'PYG': '₲', 'PEN': 'S/.', 
+        'SRD': '$', 'UYU': '$U', 'VES': 'Bs.S',
+
+        // UK & Europe
+        'GBP': '£', 'EUR': '€',
+
+        // Asia & East Asia
+        'JPY': '¥', 'KRW': '₩', 'CNY': '¥', 'HKD': 'HK$', 'TWD': 'NT$', 
+        'MOP': 'MOP$', 'SGD': 'S$', 'MYR': 'RM', 'THB': '฿', 'IDR': 'Rp', 
+        'VND': '₫', 'PHP': '₱', 'INR': '₹', 'PKR': '₨', 'BDT': '৳', 
+        'LKR': 'Rs', 'NPR': 'रू',
+
+        // Africa
+        'ZAR': 'R', 'NGN': '₦', 'KES': 'KSh', 'GHS': '₵', 'EGP': 'E£',
+
+        // Oceania & Other
+        'AUD': 'AU$', 'NZD': 'NZ$'
     };
 
     const currencyConfig = {
+        // North America & Central America
         'USD': { routingLabel: 'ABA Routing Number', routingPlaceholder: '9-digit wire code', accNoLabel: 'Account Number' },
-        'EUR': { routingLabel: 'BIC / SWIFT', routingPlaceholder: '8 or 11 characters', accNoLabel: 'IBAN Number' },
-        'GBP': { routingLabel: 'Sort Code', routingPlaceholder: 'XX-XX-XX', accNoLabel: 'Account Number' },
-        'MXN': { routingLabel: 'CLABE', routingPlaceholder: '18-digit CLABE number', accNoLabel: 'Account Number' },
-        'PHP': { routingLabel: 'BRSTN Code', routingPlaceholder: '9-digit bank code', accNoLabel: 'Account Number' },
-        'ZAR': { routingLabel: 'Branch Code', routingPlaceholder: '6-digit code', accNoLabel: 'Account Number' },
-        'INR': { routingLabel: 'IFSC Code', routingPlaceholder: '11-character code', accNoLabel: 'Account Number' },
         'CAD': { routingLabel: 'Transit Number', routingPlaceholder: 'XXXXX-XXX', accNoLabel: 'Account Number' },
-        'AUD': { routingLabel: 'BSB Code', routingPlaceholder: '6-digit code', accNoLabel: 'Account Number' },
+        'MXN': { routingLabel: 'CLABE', routingPlaceholder: '18-digit CLABE number', accNoLabel: 'Account Number' },
+        'BZD': { routingLabel: 'Routing Code', routingPlaceholder: 'Bank routing code', accNoLabel: 'Account Number' },
+        'CRC': { routingLabel: 'IBAN / Cuenta Cliente', routingPlaceholder: '22-digit account format', accNoLabel: 'Account Number' },
+        'GTQ': { routingLabel: 'Routing Code', routingPlaceholder: 'Bank routing code', accNoLabel: 'Account Number' },
+        'HNL': { routingLabel: 'Routing Code', routingPlaceholder: 'Bank routing code', accNoLabel: 'Account Number' },
+        'NIO': { routingLabel: 'Routing Code', routingPlaceholder: 'Bank routing code', accNoLabel: 'Account Number' },
+        'PAB': { routingLabel: 'Routing Code', routingPlaceholder: 'Bank routing code', accNoLabel: 'Account Number' },
+
+        // Caribbean
+        'BSD': { routingLabel: 'Transit / Routing Code', routingPlaceholder: 'Routing code', accNoLabel: 'Account Number' },
+        'BBD': { routingLabel: 'Transit / Routing Code', routingPlaceholder: 'Routing code', accNoLabel: 'Account Number' },
+        'CUP': { routingLabel: 'Bank Code', routingPlaceholder: 'Bank code', accNoLabel: 'Account Number' },
+        'DOP': { routingLabel: 'Routing Code', routingPlaceholder: 'Routing code', accNoLabel: 'Account Number' },
+        'HTG': { routingLabel: 'Routing Code', routingPlaceholder: 'Routing code', accNoLabel: 'Account Number' },
+        'JMD': { routingLabel: 'Branch / Transit Code', routingPlaceholder: '5-digit transit code', accNoLabel: 'Account Number' },
+        'TTD': { routingLabel: 'Transit Code', routingPlaceholder: 'Transit code', accNoLabel: 'Account Number' },
+
+        // South America
+        'ARS': { routingLabel: 'CBU / Alias', routingPlaceholder: '22-digit CBU number', accNoLabel: 'Account Number' },
+        'BOB': { routingLabel: 'Routing Code', routingPlaceholder: 'Routing code', accNoLabel: 'Account Number' },
+        'BRL': { routingLabel: 'PIX / Branch Code', routingPlaceholder: 'PIX key or branch code', accNoLabel: 'Account Number' },
+        'CLP': { routingLabel: 'Routing Code', routingPlaceholder: 'Routing code', accNoLabel: 'Account Number' },
+        'COP': { routingLabel: 'Routing Code', routingPlaceholder: 'Routing code', accNoLabel: 'Account Number' },
+        'GYD': { routingLabel: 'Routing Code', routingPlaceholder: 'Routing code', accNoLabel: 'Account Number' },
+        'PYG': { routingLabel: 'Routing Code', routingPlaceholder: 'Routing code', accNoLabel: 'Account Number' },
+        'PEN': { routingLabel: 'CCI (Interbank Code)', routingPlaceholder: '20-digit CCI code', accNoLabel: 'Account Number' },
+        'SRD': { routingLabel: 'Routing Code', routingPlaceholder: 'Routing code', accNoLabel: 'Account Number' },
+        'UYU': { routingLabel: 'Routing Code', routingPlaceholder: 'Routing code', accNoLabel: 'Account Number' },
+        'VES': { routingLabel: 'Routing Code', routingPlaceholder: 'Routing code', accNoLabel: 'Account Number' },
+
+        // UK & Europe
+        'GBP': { routingLabel: 'Sort Code', routingPlaceholder: 'XX-XX-XX', accNoLabel: 'Account Number' },
+        'EUR': { routingLabel: 'BIC / SWIFT', routingPlaceholder: '8 or 11 characters', accNoLabel: 'IBAN Number' },
+
+        // Asia & East Asia
         'JPY': { routingLabel: 'Bank Code', routingPlaceholder: '4-digit code', accNoLabel: 'Account Number' },
-        'CNY': { routingLabel: 'SWIFT / CNAPS', routingPlaceholder: '12-digit code', accNoLabel: 'Account Number' }
+        'KRW': { routingLabel: 'Bank Code', routingPlaceholder: '3-digit bank code', accNoLabel: 'Account Number' },
+        'CNY': { routingLabel: 'SWIFT / CNAPS', routingPlaceholder: '12-digit code', accNoLabel: 'Account Number' },
+        'HKD': { routingLabel: 'Bank / Clearing Code', routingPlaceholder: '3-digit code', accNoLabel: 'Account Number' },
+        'TWD': { routingLabel: 'Bank Code', routingPlaceholder: '3-digit code', accNoLabel: 'Account Number' },
+        'MOP': { routingLabel: 'Bank Code', routingPlaceholder: 'Bank code', accNoLabel: 'Account Number' },
+        'SGD': { routingLabel: 'Bank / Branch Code', routingPlaceholder: '4-digit bank / 3-digit branch', accNoLabel: 'Account Number' },
+        'MYR': { routingLabel: 'Clearing Code (IBG)', routingPlaceholder: 'Routing code', accNoLabel: 'Account Number' },
+        'THB': { routingLabel: 'Routing / Bank Code', routingPlaceholder: 'Routing code', accNoLabel: 'Account Number' },
+        'IDR': { routingLabel: 'Clearing Code', routingPlaceholder: 'Bank clearing code', accNoLabel: 'Account Number' },
+        'VND': { routingLabel: 'Routing / Branch Code', routingPlaceholder: 'Branch code', accNoLabel: 'Account Number' },
+        'PHP': { routingLabel: 'BRSTN Code', routingPlaceholder: '9-digit bank code', accNoLabel: 'Account Number' },
+        'INR': { routingLabel: 'IFSC Code', routingPlaceholder: '11-character code', accNoLabel: 'Account Number' },
+        'PKR': { routingLabel: 'Routing / IBAN', routingPlaceholder: 'Bank code or IBAN', accNoLabel: 'Account Number' },
+        'BDT': {routingLabel: 'Routing Number', routingPlaceholder: '9-digit routing number', accNoLabel: 'Account Number' },
+        'LKR': { routingLabel: 'Bank / Branch Code', routingPlaceholder: '4-digit bank / 3-digit branch', accNoLabel: 'Account Number' },
+        'NPR': { routingLabel: 'Routing Code', routingPlaceholder: 'Routing code', accNoLabel: 'Account Number' },
+
+        // Africa
+        'ZAR': { routingLabel: 'Branch Code', routingPlaceholder: '6-digit code', accNoLabel: 'Account Number' },
+        'NGN': { routingLabel: 'Sorting / Branch Code', routingPlaceholder: 'Bank routing code', accNoLabel: 'Account Number' },
+        'KES': { routingLabel: 'Branch Code', routingPlaceholder: 'Branch code', accNoLabel: 'Account Number' },
+        'GHS': { routingLabel: 'Branch Code', routingPlaceholder: 'Branch code', accNoLabel: 'Account Number' },
+        'EGP': { routingLabel: 'SWIFT / Routing Code', routingPlaceholder: 'Bank SWIFT code', accNoLabel: 'Account Number' },
+
+        // Oceania
+        'AUD': { routingLabel: 'BSB Code', routingPlaceholder: '6-digit code', accNoLabel: 'Account Number' },
+        'NZD': { routingLabel: 'Bank / Branch Code', routingPlaceholder: '6-digit transit code', accNoLabel: 'Account Number' }
     };
 
     let userCurrency = 'USD';
