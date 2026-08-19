@@ -39,7 +39,7 @@
     <div class="flex min-h-screen">
         <aside id="sidebar" class="sidebar w-60 bg-navy-sidebar text-white flex flex-col flex-shrink-0 min-h-screen">
             <div class="p-5">
-                <span class="text-lg font-bold italic tracking-tighter text-white">Capital<span class="text-red-500">Trusts</span></span>
+                <span class="text-lg font-bold italic tracking-tighter text-white">Capital<span class="text-red-500">Suntrust</span></span>
             </div>
             <nav class="flex-grow px-3 space-y-1">
                 <a href="user_dashboard.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs">
@@ -250,17 +250,55 @@
         }
     }
 
-    function previewImage(input, previewId, placeholderId) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
+    // Canvas-based resizing and compression for mobile photos
+    function processImageFile(file, previewId, placeholderId) {
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                const MAX_WIDTH = 1000;
+                const MAX_HEIGHT = 1000;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height = Math.round((height * MAX_WIDTH) / width);
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width = Math.round((width * MAX_HEIGHT) / height);
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Compress image to JPEG at 75% quality
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+
                 const preview = document.getElementById(previewId);
                 const placeholder = document.getElementById(placeholderId);
-                preview.src = e.target.result;
+                preview.src = compressedDataUrl;
                 preview.classList.remove('hidden');
                 placeholder.classList.add('hidden');
             }
-            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function previewImage(input, previewId, placeholderId) {
+        if (input.files && input.files[0]) {
+            processImageFile(input.files[0], previewId, placeholderId);
         }
     }
 
@@ -289,16 +327,17 @@
         confirmBtn.disabled = true;
         confirmBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i>`;
 
-        const toBase64 = file => new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-        });
-
         try {
-            const frontImg = await toBase64(document.getElementById('checkFront').files[0]);
-            const backImg = await toBase64(document.getElementById('checkBack').files[0]);
+            // Grab the optimized base64 strings directly from the preview elements
+            const frontImg = document.getElementById('front-preview').src;
+            const backImg = document.getElementById('back-preview').src;
+
+            if (!frontImg || !frontImg.startsWith('data:image')) {
+                throw new Error("Please re-capture the front image.");
+            }
+            if (!backImg || !backImg.startsWith('data:image')) {
+                throw new Error("Please re-capture the back image.");
+            }
 
             const payload = {
                 action: 'submit-mobile-deposit',
@@ -336,7 +375,7 @@
             }
         } catch (err) {
             console.error(err);
-            alert("Connection error. Please try again.");
+            alert(err.message || "Connection error. Please try again.");
             confirmBtn.disabled = false;
             confirmBtn.innerText = "Confirm";
         }

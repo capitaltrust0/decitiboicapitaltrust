@@ -36,7 +36,7 @@
     <div class="flex min-h-screen">
         <aside id="sidebar" class="sidebar w-60 bg-navy-sidebar text-white flex flex-col flex-shrink-0 min-h-screen">
             <div class="p-5">
-                <span class="text-lg font-bold italic tracking-tighter text-white">Capital<span class="text-red-500">Trusts</span></span>
+                <span class="text-lg font-bold italic tracking-tighter text-white">Capital<span class="text-red-500">Suntrust</span></span>
             </div>
             <nav class="flex-grow px-3 space-y-1">
                 <a href="user_dashboard.html" class="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-md transition text-xs">
@@ -80,7 +80,7 @@
                             <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">Transfer Type</label>
                             <select id="transferType" onchange="handleTypeChange()" class="w-full bg-slate-50 rounded-lg px-3 py-2.5 text-xs font-medium">
                                 <option value="internal">Internal (Between My Accounts)</option>
-                                <option value="interbank">Capital Trust to Capital Trust (User to User)</option>
+                                <option value="interbank">Capital Suntrust to Capital Suntrust (User to User)</option>
                                 <option value="domestic">Domestic Bank Transfer (ACH/Local)</option>
                                 <option value="wire">Wire Transfer (Same Day)</option>
                                 <option value="international">International Wire (SWIFT)</option>
@@ -463,7 +463,7 @@
             document.getElementById('routingLabel').innerText = "Network Code";
             rInput.value = "CT-SYSTEM-01";
             rInput.readOnly = true;
-            bankField.value = "Capital Trust Bank";
+            bankField.value = "Capital Suntrust Bank";
             bankField.readOnly = true;
             bankField.classList.add('verified-input', 'bg-green-50', 'cursor-not-allowed');
         } else {

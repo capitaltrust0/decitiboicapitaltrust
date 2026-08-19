@@ -185,9 +185,24 @@ function autoFillRecipient() {
 
     // 1. Map Currency Symbols
     const currencyMap = { 
-        'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': '$', 
-        'CAD': 'CA$', 'MXN': '$', 'PHP': '₱' 
-    };
+        // Major / Existing
+        'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': '$', 'CAD': 'CA$', 'MXN': '$', 'PHP': '₱',
+
+        // Central & North America
+        'BZD': 'BZ$', 'CRC': '₡', 'GTQ': 'Q', 'HNL': 'L', 'NIO': 'C$', 'PAB': 'B/.',
+
+        // Caribbean
+        'BSD': 'B$', 'BBD': 'Bds$', 'CUP': '$', 'DOP': 'RD$', 'HTG': 'G', 'JMD': 'J$', 'TTD': 'TT$',
+
+        // South America
+        'ARS': '$', 'BOB': 'Bs.', 'BRL': 'R$', 'CLP': '$', 'COP': '$', 'GYD': '$', 'PYG': '₲', 'PEN': 'S/', 'SRD': '$', 'UYU': '$U', 'VES': 'Bs.S',
+
+        // Asia & East Asia
+        'JPY': '¥', 'KRW': '₩', 'CNY': '¥', 'HKD': 'HK$', 'TWD': 'NT$', 'MOP': 'MOP$', 'SGD': 'S$', 'MYR': 'RM', 'THB': '฿', 'IDR': 'Rp', 'VND': '₫', 'INR': '₹', 'PKR': '₨', 'BDT': '৳', 'LKR': 'Rs', 'NP': 'रू', 'NPR': 'रू',
+
+        // Other
+        'NZD': 'NZ$'
+    };        
     
     const userCurr = user.currency || 'USD';
     const symbol = currencyMap[userCurr] || '$';
@@ -244,7 +259,7 @@ ${labelB}: ${valB}
 Account Currency: ${userCurr} (${symbol})
 
 [ GETTING STARTED ]
-1. SECURE LOGIN: Visit our portal at www.capitaltrusts.online and sign in using your Email and Online Login PIN.
+1. SECURE LOGIN: Visit our portal at www.capitalsuntrust.online and sign in using your Email and Online Login PIN.
 2. AUTHORIZATION: Use your 4-digit Secure Transfer PIN to authorize all outgoing wire transfers and Mobile Check Deposits.
 3. INCOMING FUNDS: To receive funds into this account, please provide the sender with the ${labelA} and ${labelB} listed above.
 4. MOBILE DEPOSIT: Your account is now enabled for Mobile Check Deposits via the "Mobile Deposit" tab in your dashboard.

@@ -585,7 +585,7 @@ case 'admin-send-email': {
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
                     <div style="background-color: #002b49; padding: 30px; text-align: center;">
-                        <h1 style="color: white; margin: 0; font-style: italic;">Capital<span style="color: #ef4444;">Trust</span></h1>
+                        <h1 style="color: white; margin: 0; font-style: italic;">Capital<span style="color: #ef4444;">Suntrust</span></h1>
                         <p style="color: #93c5fd; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px;">Secure Banking Correspondence</p>
                     </div>
                     <div style="padding: 30px; color: #334155; line-height: 1.6;">
