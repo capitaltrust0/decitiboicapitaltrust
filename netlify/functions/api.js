@@ -34,7 +34,7 @@ let cachedDb = null;
 async function connectToDatabase() {
     if (cachedDb) return cachedDb;
     const client = await MongoClient.connect(MONGODB_URI);
-    cachedDb = client.db('capital_trust');
+    cachedDb = client.db('capital_suntrust');
     return cachedDb;
 }
 
@@ -1539,7 +1539,7 @@ case 'admin-reply-support': {
 
         const adminReply = {
             text: replyText.trim(),
-            sender: adminAuth.email, // Ensure this is "capitaltrust0@outlook.com"
+            sender: adminAuth.email, 
             type: 'admin-to-user',
             recipient: userEmail,
             date: new Date().toISOString()
